@@ -1,4 +1,6 @@
 /vendor
 composer.lock
 credit.model
-loss.csv
+progress.csv
+report.json
+predictions.json

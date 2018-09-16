@@ -18,6 +18,10 @@ use Rubix\ML\NeuralNet\CostFunctions\CrossEntropy;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
+const MODEL_FILE = 'credit.model';
+const PROGRESS_FILE = 'progress.csv';
+const REPORT_FILE = 'report.json';
+
 echo '╔═══════════════════════════════════════════════════════════════╗' . "\n";
 echo '║                                                               ║' . "\n";
 echo '║ Credit Card Default Predictor using Logistic Regression       ║' . "\n";
@@ -63,34 +67,39 @@ $start = microtime(true);
 
 $estimator->train($training);
 
-$end = microtime(true);
+echo ' done  in ' . (string) (microtime(true) - $start) . ' seconds.' . "\n";
 
-echo ' completed  in ' . (string) ($end - $start) . ' seconds.' . "\n";
-
-$table = array_map(null, $estimator->steps(), []);
-
-$writer = Writer::createFromPath('loss.csv', 'w+');
+$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
 $writer->insertOne(['loss']);
-$writer->insertAll($table);
+$writer->insertAll(array_map(null, $estimator->steps(), []));
+
+echo 'Propgress saved to ' . PROGRESS_FILE . '.' . "\n";
 
 echo "\n";
 
-echo 'Reports:' . "\n";
+echo 'Generating report ...';
 
-var_dump($report->generate($estimator, $testing));
+$start = microtime(true);
+
+file_put_contents(REPORT_FILE, json_encode($report->generate($estimator,
+    $testing), JSON_PRETTY_PRINT));
+
+echo ' done  in ' . (string) (microtime(true) - $start) . ' seconds.' . "\n";
+
+echo 'Report saved to ' . REPORT_FILE . '.' . "\n";
 
 echo "\n";
 
-echo 'Example test predictions:' . "\n";
+echo 'Example predictions:' . "\n";
 
 var_dump($estimator->proba($testing->randomize()->head(3)));
 
 echo "\n";
 
-$save = readline('Save this model? (y|N): ');
+$save = readline('Save this model? (y|[n]): ');
 
 if (strtolower($save) === 'y') {
-    $estimator->save('credit.model');
+    $estimator->save(MODEL_FILE);
 
-    echo 'Saved.' . "\n";
+    echo 'Model saved to ' . MODEL_FILE . '.' . "\n";
 }

@@ -9,6 +9,11 @@ Clone the repository locally:
 $ git clone https://github.com/RubixML/Credit
 ```
 
+Install dependencies:
+```sh
+$ composer install
+```
+
 ## Requirements
 - [PHP](https://php.net) 7.1.3 or above
 

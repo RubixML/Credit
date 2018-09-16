@@ -10,6 +10,8 @@ use Rubix\ML\Reports\PredictionSpeed;
 use Rubix\ML\Reports\MulticlassBreakdown;
 use League\Csv\Reader;
 
+const PREDICTIONS_FILE = 'predictions.json';
+
 echo '╔═══════════════════════════════════════════════════════════════╗' . "\n";
 echo '║                                                               ║' . "\n";
 echo '║ Credit Card Default Predictor using Logistic Regression       ║' . "\n";
@@ -33,6 +35,13 @@ $dataset = new Unlabeled($samples);
 
 $estimator = PersistentModel::restore('credit.model');
 
-echo 'Predictions:' . "\n";
+echo 'Computing predictions ... ';
 
-var_dump($estimator->proba($dataset));
+$start = microtime(true);
+
+file_put_contents(PREDICTIONS_FILE, json_encode($estimator->proba($dataset),
+    JSON_PRETTY_PRINT));
+
+echo 'done in ' . (string) (microtime(true) - $start) . ' seconds.' . "\n";
+
+echo 'Predictions saved to ' . PREDICTIONS_FILE . '.' . "\n";

@@ -35,8 +35,8 @@ $estimator = PersistentModel::restore('credit.model');
 
 $simulations = null;
 
-while(!is_numeric($simulations)) {
-    $simulations = readline('How many simulations to run?: ');
+while(!is_numeric($simulations) or $simulations < 2 or $simulations > 50) {
+    $simulations = readline('How many simulations to run? (2 - 50): ');
 };
 
 echo "\n";
@@ -49,10 +49,8 @@ $start = microtime(true);
 
 $score = $validator->test($estimator, $dataset, new Accuracy());
 
-$end = microtime(true);
-
-echo ' done in ' . (string) ($end - $start) . ' seconds.' . "\n";
+echo ' done in ' . (string) (microtime(true) - $start) . ' seconds.' . "\n";
 
 echo "\n";
 
-echo 'Accuracy: ' . (string) $score . "\n";
+echo 'Model Accuracy: ' . (string) $score . "\n";
