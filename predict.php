@@ -1,0 +1,38 @@
+<?php
+
+include __DIR__ . '/vendor/autoload.php';
+
+use Rubix\ML\PersistentModel;
+use Rubix\ML\Datasets\Unlabeled;
+use Rubix\ML\Reports\AggregateReport;
+use Rubix\ML\Reports\ConfusionMatrix;
+use Rubix\ML\Reports\PredictionSpeed;
+use Rubix\ML\Reports\MulticlassBreakdown;
+use League\Csv\Reader;
+
+echo '╔═══════════════════════════════════════════════════════════════╗' . "\n";
+echo '║                                                               ║' . "\n";
+echo '║ Credit Card Default Predictor using Logistic Regression       ║' . "\n";
+echo '║                                                               ║' . "\n";
+echo '╚═══════════════════════════════════════════════════════════════╝' . "\n";
+echo "\n";
+
+$reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
+    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
+
+$samples = iterator_to_array($reader->getRecords([
+    'credit_limit', 'gender', 'education', 'marital_status', 'age',
+    'timeliness_1', 'timeliness_2', 'timeliness_3', 'timeliness_4',
+    'timeliness_5', 'timeliness_6', 'balance_1', 'balance_2', 'balance_3',
+    'balance_4', 'balance_5', 'balance_6', 'payment_1', 'payment_2',
+    'payment_3', 'payment_4', 'payment_5', 'payment_6', 'avg_balance',
+    'avg_payment',
+]));
+
+$dataset = new Unlabeled($samples);
+
+$estimator = PersistentModel::restore('credit.model');
+
+echo 'Predictions:' . "\n";
+
+var_dump($estimator->proba($dataset));
