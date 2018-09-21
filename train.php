@@ -46,7 +46,7 @@ $labels = iterator_to_array($reader->fetchColumn('default'));
 $dataset = new Labeled($samples, $labels);
 
 $estimator = new PersistentModel(new Pipeline(new LogisticRegression(100, 100,
-    new Adam(0.001), 1e-4, new CrossEntropy(), 1e-5), [
+    new Adam(0.001), 1e-4, new CrossEntropy(), 1e-4), [
         new NumericStringConverter(),
         new OneHotEncoder(),
         new ZScaleStandardizer(),
