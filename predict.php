@@ -11,6 +11,7 @@ use Rubix\ML\Reports\MulticlassBreakdown;
 use League\Csv\Reader;
 
 const PREDICTIONS_FILE = 'predictions.json';
+const PROBS_FILE = 'probabilities.json';
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . "\n";
 echo '║                                                               ║' . "\n";
@@ -39,9 +40,13 @@ echo 'Computing predictions ... ';
 
 $start = microtime(true);
 
-file_put_contents(PREDICTIONS_FILE, json_encode($estimator->proba($dataset),
-    JSON_PRETTY_PRINT));
+$predictions = $estimator->predict(clone $dataset);
+$probabilities = $estimator->proba(clone $dataset);
 
 echo 'done in ' . (string) (microtime(true) - $start) . ' seconds.' . "\n";
 
+file_put_contents(PREDICTIONS_FILE, json_encode($predictions, JSON_PRETTY_PRINT));
+file_put_contents(PROBS_FILE, json_encode($probabilities, JSON_PRETTY_PRINT));
+
 echo 'Predictions saved to ' . PREDICTIONS_FILE . '.' . "\n";
+echo 'Probabilities saved to ' . PROBS_FILE . '.' . "\n";

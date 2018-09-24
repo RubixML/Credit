@@ -61,6 +61,7 @@ $report = new AggregateReport([
 
 list($training, $testing) = $dataset->randomize()->stratifiedSplit(0.80);
 
+
 echo 'Training started ...';
 
 $start = microtime(true);
@@ -77,6 +78,7 @@ echo 'Propgress saved to ' . PROGRESS_FILE . '.' . "\n";
 
 echo "\n";
 
+
 echo 'Generating report ...';
 
 $start = microtime(true);
@@ -90,11 +92,6 @@ echo 'Report saved to ' . REPORT_FILE . '.' . "\n";
 
 echo "\n";
 
-echo 'Example predictions:' . "\n";
-
-var_dump($estimator->proba($testing->randomize()->head(3)));
-
-echo "\n";
 
 $save = readline('Save this model? (y|[n]): ');
 
