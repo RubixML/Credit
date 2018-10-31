@@ -4,3 +4,4 @@ credit.model
 progress.csv
 report.json
 predictions.json
+tsne.csv

@@ -2,18 +2,19 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
-use Rubix\ML\PersistentModel;
+use Rubix\ML\Manifold\TSNE;
 use Rubix\ML\Datasets\Labeled;
-use Rubix\ML\Persisters\Filesystem;
-use Rubix\ML\CrossValidation\MonteCarlo;
-use Rubix\ML\CrossValidation\Metrics\Accuracy;
+use Rubix\ML\Transformers\OneHotEncoder;
+use Rubix\ML\Kernels\Distance\Minkowski;
+use Rubix\ML\Transformers\NumericStringConverter;
 use League\Csv\Reader;
+use League\Csv\Writer;
 
-const MODEL_FILE = 'credit.model';
+const OUTPUT_FILE = 'tsne.csv';
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . "\n";
 echo '║                                                               ║' . "\n";
-echo '║ Credit Card Default Predictor using Logistic Regression       ║' . "\n";
+echo '║ Credit Card Dataset Visualizer using t-SNE                    ║' . "\n";
 echo '║                                                               ║' . "\n";
 echo '╚═══════════════════════════════════════════════════════════════╝' . "\n";
 echo "\n";
@@ -32,28 +33,31 @@ $samples = $reader->getRecords([
 
 $labels = $reader->fetchColumn('default');
 
-$dataset = Labeled::fromIterator($samples, $labels);
+$dataset = Labeled::fromIterator($samples, $labels)->randomize()->head(200);
 
-$estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
+$converter = new NumericStringConverter();
+$encoder = new OneHotEncoder();
 
-$simulations = null;
+$dataset->apply($converter);
 
-while(!is_numeric($simulations) or $simulations < 2 or $simulations > 50) {
-    $simulations = readline('How many simulations to run? (2 - 50): ');
-};
+$encoder->fit($dataset);
 
-echo "\n";
+$dataset->apply($encoder);
 
-$validator = new MonteCarlo($simulations, 0.2, true);
+$embedder = new TSNE(2, 30, 12., 1000, 1.0, 0.3, 1e-6, new Minkowski(3.));
 
-echo 'Running ' . (string) $simulations . ' monte carlo simulations ...';
+echo 'Embedding started ...';
 
 $start = microtime(true);
 
-$score = $validator->test($estimator, $dataset, new Accuracy());
+$samples = $embedder->embed($dataset);
 
-echo ' done in ' . (string) (microtime(true) - $start) . ' seconds.' . "\n";
+echo ' done  in ' . (string) (microtime(true) - $start) . ' seconds.' . "\n";
 
-echo "\n";
+$dataset = Labeled::quick($samples, $dataset->labels());
 
-echo 'Model Accuracy: ' . (string) $score . "\n";
+$writer = Writer::createFromPath(OUTPUT_FILE, 'w+');
+$writer->insertOne(['x', 'y', 'label']);
+$writer->insertAll($dataset->zip());
+
+echo 'Embedding saved to ' . OUTPUT_FILE . '.' . "\n";

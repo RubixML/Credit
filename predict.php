@@ -4,12 +4,14 @@ include __DIR__ . '/vendor/autoload.php';
 
 use Rubix\ML\PersistentModel;
 use Rubix\ML\Datasets\Unlabeled;
+use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\Reports\AggregateReport;
 use Rubix\ML\Reports\ConfusionMatrix;
 use Rubix\ML\Reports\PredictionSpeed;
 use Rubix\ML\Reports\MulticlassBreakdown;
 use League\Csv\Reader;
 
+const MODEL_FILE = 'credit.model';
 const PREDICTIONS_FILE = 'predictions.json';
 const PROBS_FILE = 'probabilities.json';
 
@@ -34,7 +36,7 @@ $samples = iterator_to_array($reader->getRecords([
 
 $dataset = new Unlabeled($samples);
 
-$estimator = PersistentModel::restore('credit.model');
+$estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
 
 echo 'Computing predictions ... ';
 
