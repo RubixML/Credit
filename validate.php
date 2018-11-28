@@ -6,17 +6,17 @@ use Rubix\ML\PersistentModel;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\CrossValidation\MonteCarlo;
-use Rubix\ML\CrossValidation\Metrics\Accuracy;
+use Rubix\ML\CrossValidation\Metrics\F1Score;
 use League\Csv\Reader;
 
 const MODEL_FILE = 'credit.model';
 
-echo '╔═══════════════════════════════════════════════════════════════╗' . "\n";
-echo '║                                                               ║' . "\n";
-echo '║ Credit Card Default Predictor using Logistic Regression       ║' . "\n";
-echo '║                                                               ║' . "\n";
-echo '╚═══════════════════════════════════════════════════════════════╝' . "\n";
-echo "\n";
+echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
+echo '║                                                               ║' . PHP_EOL;
+echo '║ Credit Card Default Predictor using Logistic Regression       ║' . PHP_EOL;
+echo '║                                                               ║' . PHP_EOL;
+echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
+echo PHP_EOL;
 
 $reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
@@ -42,18 +42,12 @@ while(!is_numeric($simulations) or $simulations < 2 or $simulations > 50) {
     $simulations = readline('How many simulations to run? (2 - 50): ');
 };
 
-echo "\n";
+echo PHP_EOL;
 
 $validator = new MonteCarlo($simulations, 0.2, true);
 
-echo 'Running ' . (string) $simulations . ' monte carlo simulations ...';
+echo 'Running ' . (string) $simulations . ' monte carlo simulations ...' . PHP_EOL;
 
-$start = microtime(true);
+$score = $validator->test($estimator, $dataset, new F1Score());
 
-$score = $validator->test($estimator, $dataset, new Accuracy());
-
-echo ' done in ' . (string) (microtime(true) - $start) . ' seconds.' . "\n";
-
-echo "\n";
-
-echo 'Model Accuracy: ' . (string) $score . "\n";
+echo 'Model F1 score: ' . (string) $score . PHP_EOL;

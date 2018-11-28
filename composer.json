@@ -13,13 +13,13 @@
             "name": "Andrew DalPino",
             "email": "me@andrewdalpino.com",
             "homepage": "https://andrewdalpino.com",
-            "role": "Engineer"
+            "role": "Lead Engineer"
         }
     ],
     "require": {
         "php": ">=7.1.3",
         "league/csv": "^9.1",
-        "rubix/ml": "0.0.6-alpha"
+        "rubix/ml": "^0.0.7-alpha"
     },
     "config": {
         "preferred-install": "dist",

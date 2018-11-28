@@ -1,7 +1,8 @@
 /vendor
 composer.lock
-credit.model
 progress.csv
 report.json
 predictions.json
-tsne.csv
+probabilities.json
+*.model
+*.old
