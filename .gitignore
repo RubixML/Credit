@@ -1,6 +1,7 @@
 /vendor
 composer.lock
 progress.csv
+embedding.csv
 report.json
 predictions.json
 probabilities.json
