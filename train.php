@@ -56,20 +56,20 @@ $estimator = new PersistentModel(new Pipeline([
 
 $estimator->setLogger(new Screen('credit'));
 
+list($training, $testing) = $dataset->randomize()->stratifiedSplit(0.80);
+
+$estimator->train($training);
+
+$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
+$writer->insertOne(['loss']);
+$writer->insertAll(array_map(null, $estimator->steps(), []));
+
 $report = new AggregateReport([
     new MulticlassBreakdown(),
     new ConfusionMatrix(),
 ]);
 
-list($training, $testing) = $dataset->randomize()->stratifiedSplit(0.80);
-
-$estimator->train($training);
-
 $predictions = $estimator->predict($testing);
-
-$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
-$writer->insertOne(['loss']);
-$writer->insertAll(array_map(null, $estimator->steps(), []));
 
 $results = $report->generate($predictions, $testing->labels());
 
