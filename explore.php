@@ -10,7 +10,6 @@ use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Kernels\Distance\Euclidean;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Transformers\NumericStringConverter;
-use Rubix\ML\Transformers\PrincipalComponentAnalysis;
 use League\Csv\Reader;
 use League\Csv\Writer;
 

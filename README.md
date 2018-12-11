@@ -114,13 +114,133 @@ Lastly, we direct the estimator to prompt us to save the model to storage.
 $estimator->prompt();
 ```
 
-That's it, if the results of the training session are good (the researchers in the original paper were able to achieve 82% accuracy using Logistic Regression) then save the model and use it to make predictions on some unknown samples.
+That's it, if the results of the training session are good (the researchers in the original paper were able to achieve 82% accuracy using their version of Logistic Regression) then save the model and we'll use it to make predictions on some unknown samples in the next section.
+
+To run the training script from the project root:
+```sh
+$ php train.php
+```
 
 ### Predicting
-On the map ...
+Along with the training data, we provide 5 unknown (*unlabeled) samples that can be used to demonstrate how to make predictions. We'll need to load the data from `unkown.csv` into a dataset object. This time we use an *Unlabeled* dataset.
 
-### Cross Validating
-On the map ...
+```php
+use Rubix\ML\Datasets\Unlabeled;
+use League\Csv\Reader;
+
+$reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
+    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
+
+$samples = $reader->getRecords([
+    'credit_limit', 'gender', 'education', 'marital_status', 'age',
+    'timeliness_1', 'timeliness_2', 'timeliness_3', 'timeliness_4',
+    'timeliness_5', 'timeliness_6', 'balance_1', 'balance_2', 'balance_3',
+    'balance_4', 'balance_5', 'balance_6', 'payment_1', 'payment_2',
+    'payment_3', 'payment_4', 'payment_5', 'payment_6', 'avg_balance',
+    'avg_payment',
+]);
+
+$dataset = Unlabeled::fromIterator($samples);
+```
+
+Now, instead of instantiating the untrained model from scratch, we use Persistent Model to load our trained model from before.
+
+```php
+use Rubix\ML\PersistentModel;
+use Rubix\ML\Persisters\Filesystem;
+
+$estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
+```
+
+Finally, we output an array of class probabilities corresponding to the unknown samples and save them to a file in JSON format.
+
+```php
+$probabilities = $estimator->proba($dataset);
+
+file_put_contents(PROBS_FILE, json_encode($probabilities, JSON_PRETTY_PRINT));
+```
+
+Now take a look at the predictions and observe that out of the 5 samples, one of them should have a higher probability of defaulting than the others.
+
+### Cross Validation
+Cross Validation tests the generalization performance of a particular model. There are many forms of cross validation to choose from in Rubix, but for this example we will use Monte Carlo simulations. The [Monte Carlo](https://github.com/RubixML/RubixML#monte-carlo) validator works by repeatedly sampling training and testing sets from the master dataset and averaging the validation score of each model. We use the [F1 Score](https://github.com/RubixML/RubixML#f1-score) as a metric because it takes into consideration both precision and recall of the estimator.
+
+```php
+use Rubix\ML\CrossValidation\MonteCarlo;
+use Rubix\ML\CrossValidation\Metrics\F1Score;
+
+$validator = new MonteCarlo(10, 0.2, true);
+
+$estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
+
+$score = $validator->test($estimator, $dataset, new F1Score());
+```
+
+### Exploring the Dataset
+The dataset we use has 26 dimensions and after one hot encoding becomes 50+ dimensions. Visualizing this type of high-dimensional data is only possible by reducing the number of dimensions to something we can plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning*. Here we will use a popular manifold learning algorithm called [t-SNE](https://github.com/RubixML/RubixML#t-sne) to help us visualize the data.
+
+As always we start with importing the dataset from CSV, but this time we are only going to use 500 random samples.
+
+```php
+use Rubix\ML\Datasets\Labeled;
+use League\Csv\Reader;
+
+$reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
+    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
+
+$samples = $reader->getRecords([
+    'credit_limit', 'gender', 'education', 'marital_status', 'age',
+    'timeliness_1', 'timeliness_2', 'timeliness_3', 'timeliness_4',
+    'timeliness_5', 'timeliness_6', 'balance_1', 'balance_2', 'balance_3',
+    'balance_4', 'balance_5', 'balance_6', 'payment_1', 'payment_2',
+    'payment_3', 'payment_4', 'payment_5', 'payment_6', 'avg_balance',
+    'avg_payment',
+]);
+
+$labels = $reader->fetchColumn('default');
+
+$dataset = Labeled::fromIterator($samples, $labels)->randomize()->head(500);
+```
+
+We instantiate the estimator using the same transformer pipeline as before with training and pass in a logger instance so we can monitor the progress of the embedding in real time. Refer to the [t-SNE documentation](https://github.com/RubixML/RubixML#t-sne) in the API reference for an explanation of the hyper-parameters.
+
+```php
+use Rubix\ML\Pipeline;
+use Rubix\ML\Manifold\TSNE;
+use Rubix\ML\Other\Loggers\Screen;
+use Rubix\ML\Transformers\OneHotEncoder;
+use Rubix\ML\Kernels\Distance\Euclidean;
+use Rubix\ML\Transformers\ZScaleStandardizer;
+use Rubix\ML\Transformers\NumericStringConverter;
+
+$estimator = new Pipeline([
+    new NumericStringConverter(),
+    new OneHotEncoder(),
+    new ZScaleStandardizer(),
+], new TSNE(2, 30, 12., 100.0, 500, 1e-8, 5, new Euclidean()));
+
+$estimator->setLogger(new Screen('credit'));
+```
+
+Then we train the estimator and use it to generate the low dimensional embedding. Finally, we save the embedding to a CSV file where it can be imported into your favorite plotting software such as [Tableu](https://www.tableau.com/) or Excel.
+
+```php
+$estimator->train(clone $dataset); // Clone dataset since we use it again later to predict
+
+$predictions = $estimator->predict($dataset);
+
+$writer = Writer::createFromPath(OUTPUT_FILE, 'w+');
+$writer->insertOne(['x', 'y']);
+$writer->insertAll($predictions);
+```
+
+> **Note**: Since we are using a transformer pipeline that modifies the dataset, we first clone the dataset to keep an original (untransformed) copy in memory to pass to `predict()`.
+
+Here is an example of what a typical embedding would look like when plotted. As you can see the samples form two distinct blobs that correspond to the group likely to default and the group likely to pay on time. If you wanted to, you could even plot the labels such that each point is colored accordingly to its class label.
+
+![Example t-SNE Embedding](https://github.com/RubixML/Credit/blob/master/docs/images/t-sne-embedding.png)
+
+> **Note**: Due to the stochastic nature of t-SNE, each embedding will look a little different from the last. The important information is contained in the overall *structure* of the data.
 
 ## Original Dataset
 Contact: I-Cheng Yeh

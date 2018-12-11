@@ -36,17 +36,9 @@ $dataset = Labeled::fromIterator($samples, $labels);
 
 $estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
 
-$simulations = null;
+$validator = new MonteCarlo(10, 0.2, true);
 
-while(!is_numeric($simulations) or $simulations < 2 or $simulations > 50) {
-    $simulations = readline('How many simulations to run? (2 - 50): ');
-};
-
-echo PHP_EOL;
-
-$validator = new MonteCarlo($simulations, 0.2, true);
-
-echo 'Running ' . (string) $simulations . ' monte carlo simulations ...' . PHP_EOL;
+echo 'Running 10 monte carlo simulations ...' . PHP_EOL;
 
 $score = $validator->test($estimator, $dataset, new F1Score());
 

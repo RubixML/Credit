@@ -11,12 +11,12 @@ const MODEL_FILE = 'credit.model';
 const PREDICTIONS_FILE = 'predictions.json';
 const PROBS_FILE = 'probabilities.json';
 
-echo '╔═══════════════════════════════════════════════════════════════╗' . "\n";
-echo '║                                                               ║' . "\n";
-echo '║ Credit Card Default Predictor using Logistic Regression       ║' . "\n";
-echo '║                                                               ║' . "\n";
-echo '╚═══════════════════════════════════════════════════════════════╝' . "\n";
-echo "\n";
+echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
+echo '║                                                               ║' . PHP_EOL;
+echo '║ Credit Card Default Predictor using Logistic Regression       ║' . PHP_EOL;
+echo '║                                                               ║' . PHP_EOL;
+echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
+echo PHP_EOL;
 
 $reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
@@ -33,8 +33,6 @@ $samples = $reader->getRecords([
 $dataset = Unlabeled::fromIterator($samples);
 
 $estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
-
-$predictions = $estimator->predict(clone $dataset);
 
 $probabilities = $estimator->proba($dataset);
 
