@@ -1,4 +1,4 @@
-# Credit Card Default Example Project
+# Credit Card Default Predictor
 
 A Rubix ML example project that predicts the probability of a customer defaulting on their credit card bill next month using a Logistic Regression estimator and data transform pipeline. This project demonstrates binary classification, one hot encoding, standardization, and model persistence.
 
@@ -21,7 +21,7 @@ $ composer install
 You can refer to the [slide deck](https://docs.google.com/presentation/d/1ZteG0Rf3siS_o-8x2r2AWw95ntcCggmmEHUfwQiuCnk/edit?usp=sharing) that accompanies this example project if you need extra help or wanted a more in depth look at the math behind Logistic Regression and Gradient Descent.
 
 ## Tutorial
-The dataset provided to us contains 30,000 labeled samples from customers of a Taiwanese credit card issuer. Our objective is to train an estimator that predicts the probability of a customer defaulting on their credit card bill next month. Since this is a binary classification problem (*will* or *won't* default) we can use Rubix's [Logistic Regression](https://github.com/RubixML/RubixML#logistic-regression) classifier which implements the Probabilistic interface. Since Logistic Regression is only compatible with continuous features (*ints* and/or *floats*) we will need [One Hot Encoder](https://github.com/RubixML/RubixML#one-hot-encoder) to convert all the categorical features such as gender, education, and marital status to continuous ones. We'll also demonstrate standardizing using the [Z Scale Standardizer](https://github.com/RubixML/RubixML#z-scale-standardizer) and model persistence using the [Persistent Model](https://github.com/RubixML/RubixML#persistent-model) wrapper.
+The dataset provided to us contains 30,000 labeled samples from customers of a Taiwanese credit card issuer. Our objective is to train an estimator that predicts the probability of a customer defaulting on their credit card bill next month. Since this is a binary classification problem (*will* or *won't* default) we can use Rubix's [Logistic Regression](https://github.com/RubixML/RubixML#logistic-regression) classifier which implements the Probabilistic interface. Logistic Regression is a supervised learner that uses an algorithm called Gradient Descent under the hood. Since Logistic Regression is only compatible with continuous features (*ints* and/or *floats*) we will need [One Hot Encoder](https://github.com/RubixML/RubixML#one-hot-encoder) to convert all the categorical features such as gender, education, and marital status to continuous ones. We'll also demonstrate standardizing using the [Z Scale Standardizer](https://github.com/RubixML/RubixML#z-scale-standardizer) and model persistence using the [Persistent Model](https://github.com/RubixML/RubixML#persistent-model) wrapper.
 
 ### Training
 Training is the process of feeding data to the learner so that it can build a model of the problem its trying to solve. In Rubix, data is carried in containers called *Datasets*. Let's start by extracting the dataset from the provided `dataset.csv` file and instantiating a *Labeled* dataset object from it.
@@ -253,6 +253,13 @@ Here is an example of what a typical embedding would look like when plotted. As 
 ![Example t-SNE Embedding](https://github.com/RubixML/Credit/blob/master/docs/images/t-sne-embedding.png)
 
 > **Note**: Due to the stochastic nature of t-SNE, each embedding will look a little different from the last. The important information is contained in the overall *structure* of the data.
+
+### Wrap Up
+- [Logistic Regression](https://github.com/RubixML/RubixML#logistic-regression) is a type of classifier that uses a supervised learning algorithm called Gradient Descent.
+- Data is passed around in [Dataset objects](https://github.com/RubixML/RubixML#dataset-objects)
+- We can use a data transform [Pipeline](https://github.com/RubixML/RubixML#pipeline) to get the data into the correct shape and format for the underlying estimator to understand
+- [Cross Validation](https://github.com/RubixML/RubixML#cross-validation) allows us to test the generalization performance of the trained estimator
+- We can convert high-dimensional datasets to easily visualizable low-dimensional represenations using a process called [Manifold Learning](https://github.com/RubixML/RubixML#embedders)
 
 ## Original Dataset
 Contact: I-Cheng Yeh
