@@ -120,6 +120,10 @@ Since model wrappers allow you to call methods on its children, we can call the 
 var_dump($estimator->steps());
 ```
 
+You can later plot the cost function using your favorite plotting software and will get something like this. As you can see, the learner learns quickly at first and then gradually *lands* as it fine tunes the parameters for the best possible accuracy.
+
+![Cross Entropy Loss](https://github.com/RubixML/Credit/blob/master/docs/images/cross-entropy-loss.png)
+
 Now that the training script is set up, we can run the program using the [PHP CLI](http://php.net/manual/en/features.commandline.php) (Command Line Interface) in a terminal window.
 
 To run the training script from the project root:
