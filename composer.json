@@ -1,7 +1,7 @@
 {
     "name": "rubix/credit",
     "type": "project",
-    "description": "A binary classification example that predicts credit card defaults using Logistic Regression.",
+    "description": "A Rubix ML example project that predicts risk of credit card default using Logistic Regression.",
     "homepage": "https://github.com/RubixML/Credit",
     "license": "MIT",
     "keywords": [
