@@ -1,6 +1,6 @@
 # Credit Card Default Predictor
 
-A Rubix ML example project that predicts the probability of a customer defaulting on their credit card bill next month using a Logistic Regression estimator and data transform pipeline. This project demonstrates binary classification, one hot encoding, standardization, and model persistence.
+A Rubix ML example project that predicts the probability of a customer defaulting on their credit card bill next month using a 30,000 sample dataset, Logistic Regression estimator, and data transform pipeline. In this project you will learn the concepts of binary classification, one hot encoding, standardization, and model persistence.
 
 ## Installation
 
@@ -17,7 +17,7 @@ $ composer install
 ## Requirements
 - [PHP](https://php.net) 7.1.3 or above
 
-### Slides
+## Slides
 You can refer to the [slide deck](https://docs.google.com/presentation/d/1ZteG0Rf3siS_o-8x2r2AWw95ntcCggmmEHUfwQiuCnk/edit?usp=sharing) that accompanies this example project if you need extra help or wanted a more in depth look at the math behind Logistic Regression and Gradient Descent.
 
 ## Tutorial
@@ -49,20 +49,20 @@ $labels = $reader->fetchColumn('default');
 $dataset = Labeled::fromIterator($samples, $labels);
 ```
 
-Here we use the PHP League's [CSV reader](https://csv.thephpleague.com/) to extract the data into two iterators - one for the samples and one for the labels. Next, we instantiate a *labeled* dataset object using the `fromIterator()` factory method. You can perform all sorts of operations on a Dataset once it's instantiated. For a full list check out the [API Reference](https://github.com/RubixML/RubixML#dataset-objects).
+Here we use the PHP League's [CSV reader](https://csv.thephpleague.com/) to extract the data from CSV format into two iterators - one for the samples and one for the labels. Next, we instantiate a *labeled* dataset object using the `fromIterator()` factory method. You can perform all sorts of operations on a Dataset once it's instantiated. For a full list check out the [API Reference](https://github.com/RubixML/RubixML#dataset-objects).
 
-We now turn our attention to instantiating and setting the hyper-parameters of the learner. Hyper-parameters are parameters whose value is set during instantiation. Different settings of the hyper-parameters can lead to different solutions. Since learners are composable like Lego® bricks in Rubix, it's easy to rapidly iterate over different models and configurations until you find the best.
+We now turn our attention to instantiating and setting the hyper-parameters of the learner. Hyper-parameters are parameters whose values are set during instantiation. Different settings of the hyper-parameters can lead to different solutions. Since learners are composable like Lego® bricks in Rubix, it's easy to rapidly iterate over different models and configurations until you find the best one.
 
 ```php
 use Rubix\ML\Pipeline;
 use Rubix\ML\PersistentModel;
-use Rubix\ML\Persisters\Filesystem;
-use Rubix\ML\NeuralNet\Optimizers\Adam;
 use Rubix\ML\Transformers\OneHotEncoder;
-use Rubix\ML\Classifiers\LogisticRegression;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Transformers\NumericStringConverter;
+use Rubix\ML\Classifiers\LogisticRegression;
+use Rubix\ML\NeuralNet\Optimizers\Adam;
 use Rubix\ML\NeuralNet\CostFunctions\CrossEntropy;
+use Rubix\ML\Persisters\Filesystem;
 
 $estimator = new PersistentModel(new Pipeline([
     new NumericStringConverter(),
@@ -75,11 +75,11 @@ $estimator = new PersistentModel(new Pipeline([
 
 Meta-Estimators are estimators that wrap or manipulate other estimators. Pipeline is a meta-Estimator that takes care of applying various transformations to the dataset before it is handed off to the underlying estimator. For our problem, we will need 3 separate transformers. The [Numeric String Converter](https://github.com/RubixML/RubixML#numeric-string-converter) takes care of converting numeric strings (ex. '17', '2.03241') to their integer and floating point counterparts. The only reason why this is necessary is because the CSV reader only recognizes string types. Next we apply a [One Hot](https://en.wikipedia.org/wiki/One-hot) encoding to the categorical features of each sample. Finally, we use the [Z Scale Standardizer](https://github.com/RubixML/RubixML#z-scale-standardizer) to center and scale the samples such that they have 0 mean and unit variance. The last transformation has been shown to help our learning algorithm converge faster.
 
-Next we define the parameters of the Logistic Regression estimator in the following order - batch size, Gradient Descent optimizer, regularization amount, max # of training epochs, minimum change in the parameters to continue training, and the cost function. The default parameters chosen for this project work fairly well and achieve results as good or slightly better than the results in the original paper.
+Next we define the parameters of the Logistic Regression estimator in the following order - batch size, Gradient Descent optimizer, L2 regularization amount, max # of training epochs, minimum change in the parameters to continue training, and the cost function. The default parameters chosen for this project work fairly well and achieve results as good or slightly better than the results in the original paper.
 
 Lastly, we wrap the entire Pipeline in a [Persistent Model](https://github.com/RubixML/RubixML#persistent-model) meta-Estimator so that we can save and load it from storage when we need it in another process.
 
-Since the Logistic Regression estimator implements the Verbose interface, we can hand it any PSR-3 compatible logger and it will spit back helpful logging information. For the purposes of this example we will use the Screen logger that comes with Rubix, but there are many other great loggers that you can use such as [Monolog](https://github.com/Seldaek/monolog) or [Analog](https://github.com/jbroadway/analog).
+Since the Logistic Regression estimator implements the Verbose interface, we can hand it any PSR-3 compatible logger and it will spit back helpful logging information. For the purposes of this example we will use the Screen logger that comes with Rubix, but there are many other great loggers that you can use such as [Monolog](https://github.com/Seldaek/monolog) or [Analog](https://github.com/jbroadway/analog) to name a couple.
 
 ```php
 use Rubix\ML\Other\Loggers\Screen;
@@ -114,13 +114,21 @@ Lastly, we direct the estimator to prompt us to save the model to storage.
 $estimator->prompt();
 ```
 
-Since model wrappers allow you to call methods on its children, we can call the `steps()` method on Logistic Regression from the outer Persistent Model wrapper to output the value of the cost function at each epoch from the last training session.
+We can call the `steps()` method on the Logistic Regression base estimator from the outer Persistent Model wrapper to output the value of the cost function at each epoch from the last training session. You can later plot the cost function using your favorite plotting software.
+
+> **Note**: Some meta-Estimators such as Persistent Model and Pipeline allow you to call the methods of the base estimator that they wrap.
 
 ```php
-var_dump($estimator->steps());
+use League\Csv\Writer;
+
+$steps = $estimator->steps();
+
+$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
+$writer->insertOne(['loss']);
+$writer->insertAll(array_map(null, $steps, []));
 ```
 
-You can later plot the cost function using your favorite plotting software and will get something like this. As you can see, the learner learns quickly at first and then gradually *lands* as it fine tunes the parameters for the best possible accuracy.
+ As you can see, the learner learns quickly at first and then gradually *lands* as it fine tunes the parameters for the best setting.
 
 ![Cross Entropy Loss](https://github.com/RubixML/Credit/blob/master/docs/images/cross-entropy-loss.png)
 
@@ -136,9 +144,11 @@ That's it, if the results of the training session are good (the researchers in t
 ### Predicting
 Along with the training data, we provide 5 unknown (*unlabeled*) samples that can be used to demonstrate how to make predictions using the estimator we just trained and saved. First, we'll need to load the data from `unkown.csv` into a dataset object just like before but this time we use an *Unlabeled* dataset.
 
+> **Note**: The full code for this section can be found in `predict.php`.
+
 ```php
-use Rubix\ML\Datasets\Unlabeled;
 use League\Csv\Reader;
+use Rubix\ML\Datasets\Unlabeled;
 
 $reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
@@ -155,7 +165,7 @@ $samples = $reader->getRecords([
 $dataset = Unlabeled::fromIterator($samples);
 ```
 
-Use the `load()` factory method on Persistent Model to reconstitute the model from storage.
+Using the `load()` factory method on Persistent Model we can reconstitute the model we trained from storage. The `load()` method takes an instance of a persister pointing to the model data in storage.
 
 ```php
 use Rubix\ML\PersistentModel;
@@ -174,12 +184,21 @@ $probabilities = $estimator->proba($dataset);
 file_put_contents(PROBS_FILE, json_encode($probabilities, JSON_PRETTY_PRINT));
 ```
 
-Now take a look at the predictions and observe that out of the 5 samples, one of them should have a higher probability of defaulting than the others.
+To run the prediction script from the project root:
+```sh
+$ php predict.php
+```
+
+Now take a look at the predictions and observe outcomes. Notice that out of the 5 samples, one of them should have a higher probability of defaulting than the others.
 
 ### Cross Validation
 Cross Validation tests the generalization performance of a model. There are a few forms of cross validation to work with in Rubix, but for this example we will just use Monte Carlo simulations. The [Monte Carlo](https://github.com/RubixML/RubixML#monte-carlo) validator works by repeatedly sampling training and testing sets from the master dataset and averaging the validation score of each trained model. We use the [F1 Score](https://github.com/RubixML/RubixML#f1-score) as the metric of validation because it takes into consideration both the precision and recall of the estimator.
 
+> **Note**: The full code for this section can be found in `validate.php`.
+
 ```php
+use Rubix\ML\PersistentModel;
+use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\CrossValidation\MonteCarlo;
 use Rubix\ML\CrossValidation\Metrics\F1Score;
 
@@ -190,16 +209,23 @@ $estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
 $score = $validator->test($estimator, $dataset, new F1Score());
 ```
 
+To run the validation script from the project root:
+```sh
+$ php validate.php
+```
+
 A good F1 score for this dataset using Logistic Regression is in the higher 0.60s. If you're comfortable so far continue on to the next section where we'll explore a more advanced machine learning concept called manifold learning. We'll use it to visualize the credit card dataset.
 
 ### Exploring the Dataset
-The dataset given to use has 26 dimensions and after one hot encoding it becomes 50+ dimensions. Visualizing this type of high-dimensional data is only possible by reducing the number of dimensions to something we can plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning*. Here we will use a popular manifold learning algorithm called [t-SNE](https://github.com/RubixML/RubixML#t-sne) to help us visualize the data.
+The dataset given to us has 26 dimensions and after one hot encoding it becomes over 50 dimensional. Visualizing this type of high-dimensional data is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning*. Here we will use a popular manifold learning algorithm called [t-SNE](https://github.com/RubixML/RubixML#t-sne) to help us visualize the data.
 
-As always we start by importing the dataset from CSV, but this time we are only going to use 500 random samples to generate the low dimensional representation.
+As always we start by importing the dataset from its CSV file, but this time we are only going to use 500 random samples. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object.
+
+> **Note**: The full code for this section can be found in `explore.php`.
 
 ```php
-use Rubix\ML\Datasets\Labeled;
 use League\Csv\Reader;
+use Rubix\ML\Datasets\Labeled;
 
 $reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
@@ -238,10 +264,12 @@ $estimator = new Pipeline([
 $estimator->setLogger(new Screen('credit'));
 ```
 
-Then we train the estimator and use it to generate the low dimensional embedding. Finally, we save the embedding to a CSV file where it can be imported into your favorite plotting software such as [Tableu](https://www.tableau.com/) or Excel.
+Then we train the estimator and use it to generate the low dimensional embedding. Finally, we save the embedding to a CSV file where it can be imported into your favorite plotting software such as [Tableu](https://www.tableau.com/) or [Excel](https://products.office.com/en-us/excel).
 
 ```php
-$estimator->train(clone $dataset); // Clone dataset since we use it again later to predict
+use League\Csv\Writer;
+
+$estimator->train(clone $dataset); // Clone dataset since we use it again later to make predictions
 
 $predictions = $estimator->predict($dataset);
 
@@ -250,13 +278,18 @@ $writer->insertOne(['x', 'y']);
 $writer->insertAll($predictions);
 ```
 
-> **Note**: Since we are using a transformer pipeline that modifies the dataset, we first clone the dataset to keep an original (untransformed) copy in memory to pass to `predict()`.
+> **Note**: Since we are using a transformer pipeline that modifies the dataset in place, we first clone the dataset to keep an original (untransformed) copy in memory to pass to `predict()`.
 
-Here is an example of what a typical embedding would look like when plotted. As you can see the samples form two distinct blobs that correspond to the group likely to default and the group likely to pay on time. If you wanted to, you could even plot the labels such that each point is colored accordingly to its class label.
+Here is an example of what a typical embedding would look like when plotted. As you can see the samples form two distinct blobs that correspond to the group likely to *default* and the group likely to pay *on time*. If you wanted to, you could even plot the labels such that each point is colored accordingly to its class label.
 
 ![Example t-SNE Embedding](https://github.com/RubixML/Credit/blob/master/docs/images/t-sne-embedding.png)
 
-> **Note**: Due to the stochastic nature of t-SNE, each embedding will look a little different from the last. The important information is contained in the overall *structure* of the data.
+To run the embedding script from the project root:
+```sh
+$ php explore.php
+```
+
+> **Note**: Due to the stochastic nature of the t-SNE algorithm, each embedding will look a little different from the last. The important information is contained in the overall *structure* of the data.
 
 ### Wrap Up
 - [Logistic Regression](https://github.com/RubixML/RubixML#logistic-regression) is a type of classifier that uses a supervised learning algorithm called Gradient Descent.
