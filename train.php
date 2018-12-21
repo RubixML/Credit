@@ -50,7 +50,7 @@ $estimator = new PersistentModel(new Pipeline([
     new NumericStringConverter(),
     new OneHotEncoder(),
     new ZScaleStandardizer(),
-], new LogisticRegression(128, new Adam(0.001), 1e-4, 300, 1e-4, new CrossEntropy())),
+], new LogisticRegression(100, new Adam(0.001), 1e-4)),
     new Filesystem(MODEL_FILE)
 );
 

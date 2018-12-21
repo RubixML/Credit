@@ -1,6 +1,10 @@
 # Credit Card Default Predictor
 
-A Rubix ML example project that predicts the probability of a customer defaulting on their credit card bill next month using a 30,000 sample dataset, Logistic Regression estimator, and data transform pipeline. In this project you will learn the concepts of binary classification, one hot encoding, standardization, and model persistence.
+An example project that predicts the probability of a customer defaulting on their credit card bill next month using a 30,000 sample dataset, Logistic Regression estimator, and data transform pipeline. In this project you will learn the concepts of binary classification, one hot encoding, standardization, and model persistence.
+
+- **Difficulty**: Medium
+- **Training time**: Short
+- **Memory needed**: < 1G
 
 ## Installation
 
@@ -68,8 +72,8 @@ $estimator = new PersistentModel(new Pipeline([
     new NumericStringConverter(),
     new OneHotEncoder(),
     new ZScaleStandardizer(),
-], new LogisticRegression(128, new Adam(0.001), 1e-4, 300, 1e-4, new CrossEntropy())),
-    new Filesystem(MODEL_FILE)
+], new LogisticRegression(100, new Adam(0.001), 1e-4)),
+    new Filesystem('credit.model')
 );
 ```
 
@@ -123,7 +127,7 @@ use League\Csv\Writer;
 
 $steps = $estimator->steps();
 
-$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
+$writer = Writer::createFromPath('progress.csv', 'w+');
 $writer->insertOne(['loss']);
 $writer->insertAll(array_map(null, $steps, []));
 ```
@@ -171,7 +175,7 @@ Using the `load()` factory method on Persistent Model we can reconstitute the mo
 use Rubix\ML\PersistentModel;
 use Rubix\ML\Persisters\Filesystem;
 
-$estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
+$estimator = PersistentModel::load(new Filesystem('credit.model'));
 ```
 
 Finally, we output an array of class probabilities corresponding to the unknown samples and save them to a JSON file. We could also predict just the class outcomes if we wanted to, but we want to be able to measure varying degrees of risk (high, medium, low, etc.) so class probabilities make more sense.
@@ -181,7 +185,7 @@ $probabilities = $estimator->proba($dataset);
 
 // $predictions = $estimator->predict($dataset);
 
-file_put_contents(PROBS_FILE, json_encode($probabilities, JSON_PRETTY_PRINT));
+file_put_contents('probabilities.json', json_encode($probabilities, JSON_PRETTY_PRINT));
 ```
 
 To run the prediction script from the project root:
@@ -204,7 +208,7 @@ use Rubix\ML\CrossValidation\Metrics\F1Score;
 
 $validator = new MonteCarlo(10, 0.2, true);
 
-$estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
+$estimator = PersistentModel::load(new Filesystem('credit.model'));
 
 $score = $validator->test($estimator, $dataset, new F1Score());
 ```
@@ -273,7 +277,7 @@ $estimator->train(clone $dataset); // Clone dataset since we use it again later 
 
 $predictions = $estimator->predict($dataset);
 
-$writer = Writer::createFromPath(OUTPUT_FILE, 'w+');
+$writer = Writer::createFromPath('embedding.csv', 'w+');
 $writer->insertOne(['x', 'y']);
 $writer->insertAll($predictions);
 ```
