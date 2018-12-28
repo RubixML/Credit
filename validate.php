@@ -18,6 +18,8 @@ echo '║                                                               ║' . P
 echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
 echo PHP_EOL;
 
+echo 'Loading data into memory ...' . PHP_EOL;
+
 $reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
@@ -38,8 +40,8 @@ $estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
 
 $validator = new MonteCarlo(10, 0.2, true);
 
-echo 'Running 10 monte carlo simulations ...' . PHP_EOL;
+echo 'Executing 10 monte carlo simulations ...' . PHP_EOL;
 
 $score = $validator->test($estimator, $dataset, new F1Score());
 
-echo 'Model F1 score: ' . (string) $score . PHP_EOL;
+echo 'F1 score: ' . (string) $score . PHP_EOL;

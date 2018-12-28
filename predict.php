@@ -18,6 +18,8 @@ echo '║                                                               ║' . P
 echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
 echo PHP_EOL;
 
+echo 'Loading data into memory ...' . PHP_EOL;
+
 $reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
@@ -36,8 +38,6 @@ $estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
 
 $probabilities = $estimator->proba($dataset);
 
-file_put_contents(PREDICTIONS_FILE, json_encode($predictions, JSON_PRETTY_PRINT));
 file_put_contents(PROBS_FILE, json_encode($probabilities, JSON_PRETTY_PRINT));
 
-echo 'Predictions saved to ' . PREDICTIONS_FILE . PHP_EOL;
 echo 'Probabilities saved to ' . PROBS_FILE . PHP_EOL;

@@ -22,6 +22,8 @@ echo '║                                                               ║' . P
 echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
 echo PHP_EOL;
 
+echo 'Loading data into memory ...' . PHP_EOL;
+
 $reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
@@ -42,7 +44,7 @@ $estimator = new Pipeline([
     new NumericStringConverter(),
     new OneHotEncoder(),
     new ZScaleStandardizer(),
-], new TSNE(2, 30, 12., 100.0, 500, 1e-8, 5, new Euclidean()));
+], new TSNE(2, 30, 12., 100.0, new Euclidean()));
 
 $estimator->setLogger(new Screen('credit'));
 
