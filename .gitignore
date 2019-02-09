@@ -7,3 +7,5 @@ predictions.json
 probabilities.json
 *.model
 *.old
+.vscode
+.vs
