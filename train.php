@@ -48,7 +48,7 @@ $labels = $reader->fetchColumn('default');
 
 $dataset = Labeled::fromIterator($samples, $labels);
 
-list($training, $testing) = $dataset->randomize()->stratifiedSplit(0.80);
+[$training, $testing] = $dataset->randomize()->stratifiedSplit(0.80);
 
 $estimator = new PersistentModel(new Pipeline([
     new NumericStringConverter(),
@@ -66,19 +66,18 @@ $writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
 $writer->insertOne(['loss']);
 $writer->insertAll(array_map(null, $estimator->steps(), []));
 
-echo 'Progress saved to ' . PROGRESS_FILE . PHP_EOL;
+$predictions = $estimator->predict($testing);
 
 $report = new AggregateReport([
     new MulticlassBreakdown(),
     new ConfusionMatrix(),
 ]);
 
-$predictions = $estimator->predict($testing);
-
 $results = $report->generate($predictions, $testing->labels());
 
 file_put_contents(REPORT_FILE, json_encode($results, JSON_PRETTY_PRINT));
 
+echo 'Progress saved to ' . PROGRESS_FILE . PHP_EOL;
 echo 'Report saved to ' . REPORT_FILE . PHP_EOL;
 
 if (strtolower(readline('Save this model? (y|[n]): ')) === 'y') {

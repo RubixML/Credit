@@ -3,7 +3,7 @@
 include __DIR__ . '/vendor/autoload.php';
 
 use Rubix\ML\Pipeline;
-use Rubix\ML\Manifold\TSNE;
+use Rubix\ML\Embedders\TSNE;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\Transformers\OneHotEncoder;
