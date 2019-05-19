@@ -30,7 +30,7 @@ The dataset provided to us contains 30,000 labeled samples from customers of a T
 ### Training
 Training is the process of feeding data to the learner so that it can build a model of the problem its trying to solve. In Rubix, data is carried in containers called *Datasets*. Let's start by extracting the data from the provided `dataset.csv` file and instantiating a *Labeled* dataset object from it.
 
-> **Note**: The full code for this section can be found in `train.php`.
+> Source code can be found in the [train.php](https://github.com/RubixML/Credit/blob/master/train.php) file in project root.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
@@ -125,7 +125,7 @@ $ php train.php
 ### Cross Validation
 The [Monte Carlo](https://github.com/RubixML/RubixML#monte-carlo) cross validator works by repeatedly sampling training and testing sets from the master dataset and then averaging the validation score of each trained model. The number of simulations and the ratio of training to testing data can be set by the user. The more simulations executed, the more precise the validation score will be. We use the [FBeta](https://github.com/RubixML/RubixML#fbeta) metric to score our estimator because it takes into consideration both the precision and recall of the predictions. As usual, we'll need to start by loading the dataset into memory.
 
-> **Note**: The full code for this section can be found in `validate.php`.
+> Source code can be found in the [validate.php](https://github.com/RubixML/Housing/blob/master/validate.php) file in project root.
 
 ```php
 use League\Csv\Reader;
@@ -180,7 +180,7 @@ $ php validate.php
 ### Predicting
 Along with the training data, we provide 5 unknown (*unlabeled*) samples that can be used to demonstrate how to make predictions on new data using the estimator we just trained and persisted. First, we'll need to load the data from `unkown.csv` into a dataset object just like before, but this time we use an *Unlabeled* dataset because we don't know them.
 
-> **Note**: The full code for this section can be found in `predict.php`.
+> Source code can be found in the [predict.php](https://github.com/RubixML/Housing/blob/master/predict.php) file in project root.
 
 ```php
 use League\Csv\Reader;
@@ -226,7 +226,7 @@ The dataset given to us has 26 dimensions and after one hot encoding it becomes 
 
 As usual we start by importing the dataset from its CSV file, but this time we are only going to use 1000 of the samples. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object.
 
-> **Note**: The full code for this section can be found in `explore.php`.
+> Source code can be found in the [explore.php](https://github.com/RubixML/Housing/blob/master/explore.php) file in project root.
 
 ```php
 use League\Csv\Reader;
