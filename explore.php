@@ -2,12 +2,10 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
-use Rubix\ML\Pipeline;
 use Rubix\ML\Embedders\TSNE;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\Transformers\OneHotEncoder;
-use Rubix\ML\Kernels\Distance\Euclidean;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Transformers\NumericStringConverter;
 use League\Csv\Reader;
@@ -38,22 +36,20 @@ $samples = $reader->getRecords([
 
 $labels = $reader->fetchColumn('default');
 
-$dataset = Labeled::fromIterator($samples, $labels)->randomize()->head(500);
+$dataset = Labeled::fromIterator($samples, $labels)->randomize()->head(1000);
 
-$estimator = new Pipeline([
-    new NumericStringConverter(),
-    new OneHotEncoder(),
-    new ZScaleStandardizer(),
-], new TSNE(2, 30, 12., 100.0, new Euclidean()));
+$dataset->apply(new NumericStringConverter());
+$dataset->apply(new OneHotEncoder());
+$dataset->apply(new ZScaleStandardizer());
+
+$estimator = new TSNE(2, 30, 12., 100.0);
 
 $estimator->setLogger(new Screen('credit'));
 
-$estimator->train(clone $dataset); // Clone dataset since we use it again later to predict
-
-$predictions = $estimator->predict($dataset);
+$embedding = $estimator->embed($dataset);
 
 $writer = Writer::createFromPath(OUTPUT_FILE, 'w+');
-$writer->insertOne(['x', 'y']);
-$writer->insertAll($predictions);
+$writer->insertOne(['x', 'y', 'label']);
+$writer->insertAll(iterator_to_array($embedding->zip()));
 
 echo 'Embedding saved to ' . OUTPUT_FILE . '.' . PHP_EOL;

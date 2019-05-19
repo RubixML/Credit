@@ -3,10 +3,11 @@
 include __DIR__ . '/vendor/autoload.php';
 
 use Rubix\ML\PersistentModel;
+use Rubix\ML\Backends\Serial;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\CrossValidation\MonteCarlo;
-use Rubix\ML\CrossValidation\Metrics\F1Score;
+use Rubix\ML\CrossValidation\Metrics\FBeta;
 use League\Csv\Reader;
 
 const MODEL_FILE = 'credit.model';
@@ -40,8 +41,10 @@ $estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
 
 $validator = new MonteCarlo(10, 0.2, true);
 
-echo 'Executing 10 monte carlo simulations ...' . PHP_EOL;
+$validator->setBackend(new Serial());
 
-$score = $validator->test($estimator, $dataset, new F1Score());
+echo 'Running 10 simulations ...' . PHP_EOL;
+
+$score = $validator->test($estimator, $dataset, new FBeta(1.));
 
 echo 'F1 score: ' . (string) $score . PHP_EOL;

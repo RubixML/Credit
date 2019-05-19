@@ -8,7 +8,6 @@ use Rubix\ML\Persisters\Filesystem;
 use League\Csv\Reader;
 
 const MODEL_FILE = 'credit.model';
-const PREDICTIONS_FILE = 'predictions.json';
 const PROBS_FILE = 'probabilities.json';
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
