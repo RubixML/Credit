@@ -13,6 +13,8 @@ use League\Csv\Writer;
 
 const OUTPUT_FILE = 'embedding.csv';
 
+ini_set('memory_limit', '-1');
+
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '║ Credit Card Dataset Embedder using t-SNE                      ║' . PHP_EOL;

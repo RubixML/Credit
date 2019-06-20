@@ -10,6 +10,8 @@ use League\Csv\Reader;
 const MODEL_FILE = 'credit.model';
 const PROBS_FILE = 'probabilities.json';
 
+ini_set('memory_limit', '-1');
+
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '║ Credit Card Default Predictor using Logistic Regression       ║' . PHP_EOL;
