@@ -3,21 +3,23 @@
 include __DIR__ . '/vendor/autoload.php';
 
 use Rubix\ML\Pipeline;
-use Rubix\ML\PersistentModel;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Other\Loggers\Screen;
-use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\NeuralNet\Optimizers\Adam;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Classifiers\LogisticRegression;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\NeuralNet\CostFunctions\CrossEntropy;
+use Rubix\ML\CrossValidation\Reports\AggregateReport;
+use Rubix\ML\CrossValidation\Reports\ConfusionMatrix;
+use Rubix\ML\CrossValidation\Reports\MulticlassBreakdown;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
 const MODEL_FILE = 'credit.model';
 const PROGRESS_FILE = 'progress.csv';
+const REPORT_FILE = 'report.json';
 
 ini_set('memory_limit', '-1');
 
@@ -46,25 +48,36 @@ $labels = $reader->fetchColumn('default');
 
 $dataset = Labeled::fromIterator($samples, $labels);
 
-$estimator = new PersistentModel(
-    new Pipeline([
-        new NumericStringConverter(),
-        new OneHotEncoder(),
-        new ZScaleStandardizer(),
-    ], new LogisticRegression(100, new Adam(0.001))),
-    new Filesystem(MODEL_FILE, true)
-);
+$dataset->apply(new NumericStringConverter());
+
+[$training, $testing] = $dataset->stratifiedSplit(0.8);
+
+$estimator = new Pipeline([
+    new OneHotEncoder(),
+    new ZScaleStandardizer(),
+], new LogisticRegression(200, new Adam(0.001)));
 
 $estimator->setLogger(new Screen('credit'));
 
-$estimator->train($dataset);
+$estimator->train($training);
+
+$steps = $estimator->steps();
 
 $writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
 $writer->insertOne(['loss']);
-$writer->insertAll(array_map(null, $estimator->steps(), []));
+$writer->insertAll(array_map(null, $steps, []));
 
 echo 'Progress saved to ' . PROGRESS_FILE . PHP_EOL;
 
-if (strtolower(readline('Save this model? (y|[n]): ')) === 'y') {
-    $estimator->save();
-}
+$report = new AggregateReport([
+    new MulticlassBreakdown(),
+    new ConfusionMatrix(),
+]);
+
+$predictions = $estimator->predict($testing);
+
+$results = $report->generate($predictions, $testing->labels());
+
+file_put_contents(REPORT_FILE, json_encode($results, JSON_PRETTY_PRINT));
+
+echo 'Report saved to ' . REPORT_FILE . PHP_EOL;

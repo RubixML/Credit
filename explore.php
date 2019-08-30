@@ -44,14 +44,14 @@ $dataset->apply(new NumericStringConverter());
 $dataset->apply(new OneHotEncoder());
 $dataset->apply(new ZScaleStandardizer());
 
-$estimator = new TSNE(2, 30, 12., 100.0);
+$estimator = new TSNE(2, 30);
 
 $estimator->setLogger(new Screen('credit'));
 
 $embedding = $estimator->embed($dataset);
 
 $writer = Writer::createFromPath(OUTPUT_FILE, 'w+');
-$writer->insertOne(['x', 'y', 'label']);
-$writer->insertAll(iterator_to_array($embedding->zip()));
+$writer->insertOne(['x', 'y']);
+$writer->insertAll($embedding);
 
 echo 'Embedding saved to ' . OUTPUT_FILE . '.' . PHP_EOL;
