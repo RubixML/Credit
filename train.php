@@ -17,10 +17,6 @@ use Rubix\ML\CrossValidation\Reports\MulticlassBreakdown;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
-const MODEL_FILE = 'credit.model';
-const PROGRESS_FILE = 'progress.csv';
-const REPORT_FILE = 'report.json';
-
 ini_set('memory_limit', '-1');
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
@@ -61,13 +57,13 @@ $estimator->setLogger(new Screen('credit'));
 
 $estimator->train($training);
 
-$steps = $estimator->steps();
+$losses = $estimator->steps();
 
-$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
+$writer = Writer::createFromPath('progress.csv', 'w+');
 $writer->insertOne(['loss']);
-$writer->insertAll(array_map(null, $steps, []));
+$writer->insertAll(array_map(null, $losses, []));
 
-echo 'Progress saved to ' . PROGRESS_FILE . PHP_EOL;
+echo 'Progress saved to progress.csv' . PHP_EOL;
 
 $report = new AggregateReport([
     new MulticlassBreakdown(),
@@ -78,6 +74,6 @@ $predictions = $estimator->predict($testing);
 
 $results = $report->generate($predictions, $testing->labels());
 
-file_put_contents(REPORT_FILE, json_encode($results, JSON_PRETTY_PRINT));
+file_put_contents('report.json', json_encode($results, JSON_PRETTY_PRINT));
 
-echo 'Report saved to ' . REPORT_FILE . PHP_EOL;
+echo 'Report saved to report.json' . PHP_EOL;

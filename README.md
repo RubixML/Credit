@@ -22,12 +22,14 @@ $ composer install
 - [PHP](https://php.net) 7.1.3 or above
 
 ## Tutorial
+
+### Introduction
 The dataset provided to us contains 30,000 labeled samples from customers of a Taiwanese credit card issuer. Our objective is to train an estimator that predicts the probability of a customer defaulting on their credit card bill the next month. Since this is a *binary* classification problem (*will* default or *won't* default) we can use a [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) classifier which implements the Probabilistic interface. Logistic Regression is a supervised learner that trains using an algorithm called *Gradient Descent* under the hood.
 
-### Training
-Training is the process of feeding data to the learner so that it can build a model of the problem its trying to solve. In Rubix ML, data are passed in containers called [Dataset objects](https://docs.rubixml.com/en/latest/datasets/api.html). We'll start by extracting the data provided in the `dataset.csv` file and then instantiating a [Labeled](https://docs.rubixml.com/en/latest/datasets/labeled.html) dataset object from it.
-
 > **Note:** The source code for this example can be found in the [train.php](https://github.com/RubixML/Credit/blob/master/train.php) file in project root.
+
+### Extracting the Data
+In Rubix ML, data are passed in specialized containers called [Dataset objects](https://docs.rubixml.com/en/latest/datasets/api.html). We'll start out by extracting the data provided in the `dataset.csv` file and then instantiating a [Labeled](https://docs.rubixml.com/en/latest/datasets/labeled.html) dataset object from it.
 
 ```php
 use League\Csv\Reader;
@@ -47,7 +49,7 @@ $samples = $reader->getRecords([
 $labels = $reader->fetchColumn('default');
 ```
 
-First, we'll import the PHP League's [CSV reader](https://csv.thephpleague.com/) into our project to help extract the data from the CSV file. Both the `getRecords()` and `fetchColumn()` methods return iterators which we'll use to load the samples and labels respectively. Now we can instantiate the labeled dataset object using the `fromIterator()` static factory method.
+First, we'll import the PHP League's [CSV reader](https://csv.thephpleague.com/) into our project to help extract the data from the CSV file. Both the `getRecords()` and `fetchColumn()` methods return iterators which we'll use to load the samples and labels respectively. Afterward, we can instantiate the labeled dataset object using the `fromIterator()` static factory method.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
@@ -55,6 +57,7 @@ use Rubix\ML\Datasets\Labeled;
 $dataset = Labeled::fromIterator($samples, $labels);
 ```
 
+### Dataset Preparation
 Since the CSV Reader imports everything as a string type we'll need to convert the numeric types to their integer and floating point number representations before proceeding. Fortunately, the [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) accomplishes this for us by applying a transformation to the dataset all in one go.
 
 ```php
@@ -88,12 +91,14 @@ $estimator = new Pipeline([
 ], new LogisticRegression(200, new Adam(0.001)));
 ```
 
+### Instantiating the Learner
 You'll notice that [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) has a few parameters in its constructor. Those are are the *hyper-parameters* of the learner and they control the behavior of the algorithm during training and inference. For this example, we'll specify the first two hyper-parameters, the *batch size* and the Gradient Descent *optimizer* with *learning rate*.
 
 As previously mentioned, Logistic Regression trains using Gradient Descent. Specifically, it uses Mini-batch Gradient Descent which is a form of GD that feeds small batches of the randomized dataset into the learner which are then used to estimate the gradient of the loss function at each epoch. The size of the batch is determined by the *batch size* parameter. A small batch size typically trains faster but produces a rougher gradient. For our example, we'll choose 200 but feel free to play with this setting.
 
 The next hyper-parameter is the Optimizer which controls the update step of the GD algorithm. The [Adam](https://docs.rubixml.com/en/latest/neural-network/optimizers/adam.html) optimizer is an adaptive optimizer that combines a momentum force and a buffering force to each parameter update. It uses a global *learning rate* that can be set by the user and typically ranges from 0.1 to 0.0001. The default setting of 0.001 works fairly well for this example.
 
+### Setting a Logger
 Since the Logistic Regression learner implements the [Verbose](https://docs.rubixml.com/en/latest/verbose.html) interface, we can hand it a [PSR-3](https://www.php-fig.org/psr/psr-3/) compatible logger and it will log helpful information for us. For the purposes of this example we will use the Screen logger that comes built-in with Rubix ML, but there are many great loggers to choose from such as [Monolog](https://github.com/Seldaek/monolog) and [Analog](https://github.com/jbroadway/analog) to name a couple.
 
 ```php
@@ -102,16 +107,18 @@ use Rubix\ML\Other\Loggers\Screen;
 $estimator->setLogger(new Screen('credit'));
 ```
 
+### Training
 Now we are ready to train the learner. Simply pass the *training* set that we created earlier to the `train()` method on the estimator instance.
 
 ```php
 $estimator->train($dataset);
 ```
 
+### Training Loss
 The `steps()` method on the Logistic Regression base estimator outputs the value of the cost function at each epoch from the last training session. You can plot those values by dumping the them to a CSV file and importing them into your favorite plotting software such as [Plotly](https://plot.ly/) or [Tableu](https://public.tableau.com/en-us/s/).
 
 ```php
-$steps = $estimator->steps();
+$losses = $estimator->steps();
 ```
 
  The loss should be decreasing at each epoch and changes in the loss value should get smaller the closer the learner is to converging on the minimum of the cost function. As you can see, the Logistic Regression learns quickly at first and then gradually *lands* as it fine tunes the weights of the model for the best setting.
@@ -151,32 +158,31 @@ var_dump($results);
 **Output**
 
 ```json
-[
-    {
-        "overall": {
-            "accuracy": 0.8275287452091318,
-            "precision": 0.7854524313333155,
-            "recall": 0.6558631809497781,
-            "specificity": 0.6558631809497781,
-            "negative_predictive_value": 0.7854524313333155,
-            "false_discovery_rate": 0.2145475686666844,
-            "miss_rate": 0.34413681905022186,
-            "fall_out": 0.34413681905022186,
-            "false_omission_rate": 0.2145475686666844,
-            "f1_score": 0.6843061817340108,
-            "mcc": 0.42186027998596265,
-            "informedness": 0.31172636189955627,
-            "markedness": 0.5709048626666311,
-            "true_positives": 4966,
-            "true_negatives": 4966,
-            "false_positives": 1035,
-            "false_negatives": 1035,
-            "cardinality": 6001
-        },
-        // ...
+{
+    "overall": {
+        "accuracy": 0.8275287452091318,
+        "precision": 0.7854524313333155,
+        "recall": 0.6558631809497781,
+        "specificity": 0.6558631809497781,
+        "negative_predictive_value": 0.7854524313333155,
+        "false_discovery_rate": 0.2145475686666844,
+        "miss_rate": 0.34413681905022186,
+        "fall_out": 0.34413681905022186,
+        "false_omission_rate": 0.2145475686666844,
+        "f1_score": 0.6843061817340108,
+        "mcc": 0.42186027998596265,
+        "informedness": 0.31172636189955627,
+        "markedness": 0.5709048626666311,
+        "true_positives": 4966,
+        "true_negatives": 4966,
+        "false_positives": 1035,
+        "false_negatives": 1035,
+        "cardinality": 6001
+    }
+}
 ```
 
-### Exploring the Dataset
+### Vizualizing the Dataset
 The dataset given to us has 25 features and after one hot encoding it becomes 93. Visualizing this type of high-dimensional data is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning*. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) to help us visualize the data by embedding it into just two dimensions.
 
 As usual, we start by importing the dataset from its CSV file, but this time we are only going to use 1000 samples. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object.
@@ -230,7 +236,7 @@ Lastly, pass the dataset to the `embed()` method on the [Embedder](https://docs.
 $embedding = $embedder->embed($dataset);
 ```
 
-Here is an example of what a typical embedding looks like when plotted. As you can see the samples form two distinct blobs that correspond to the group likely to *default* and the group likely to pay *on time*. If you wanted to, you could even plot the labels such that each point is colored accordingly to its class label.
+Here is an example of what a typical embedding looks like when plotted in 2 dimensions. As you can see the samples form two distinct blobs that correspond to the group likely to *default* and the group likely to pay *on time*. If you wanted to, you could even plot the labels such that each point is colored accordingly to its class label.
 
 ![Example t-SNE Embedding](https://raw.githubusercontent.com/RubixML/Credit/master/docs/images/t-sne-embedding.svg?sanitize=true)
 
@@ -242,6 +248,9 @@ Here is an example of what a typical embedding looks like when plotted. As you c
 - [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) is a probabilistic classifier that uses a supervised learning algorithm called Gradient Descent under the hood.
 - [Cross Validation](https://docs.rubixml.com/en/latest/cross-validation/api.html) allows us to test the generalization performance of the trained estimator.
 - We can embed high-dimensional datasets into easily visualizable low-dimensional represenations using a process called [Manifold Learning](https://docs.rubixml.com/en/latest/embedders/api.html).
+
+### Next Steps
+The Logistic Regression estimator we just trained is able to achieve the same results as in the original paper, however, there are other models to choose from that may perform better. Consider the same problem using an ensemble method such as [AdaBoost](https://docs.rubixml.com/en/latest/classifiers/adaboost.html) or [Random Forest](https://docs.rubixml.com/en/latest/classifiers/random-forest.html) for your next step.
 
 ## Presentation Slides
 You can refer to the [slide deck](https://docs.google.com/presentation/d/1ZteG0Rf3siS_o-8x2r2AWw95ntcCggmmEHUfwQiuCnk/edit?usp=sharing) that accompanies this example project if you need extra help or a more in depth look at the math behind Logistic Regression, Gradient Descent, and the Cross Entropy cost function.

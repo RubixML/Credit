@@ -11,8 +11,6 @@ use Rubix\ML\Transformers\NumericStringConverter;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
-const OUTPUT_FILE = 'embedding.csv';
-
 ini_set('memory_limit', '-1');
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
@@ -44,14 +42,14 @@ $dataset->apply(new NumericStringConverter());
 $dataset->apply(new OneHotEncoder());
 $dataset->apply(new ZScaleStandardizer());
 
-$estimator = new TSNE(2, 30);
+$embedder = new TSNE(2, 30);
 
-$estimator->setLogger(new Screen('credit'));
+$embedder->setLogger(new Screen('credit'));
 
-$embedding = $estimator->embed($dataset);
+$embedding = $embedder->embed($dataset);
 
-$writer = Writer::createFromPath(OUTPUT_FILE, 'w+');
+$writer = Writer::createFromPath('embedding.csv', 'w+');
 $writer->insertOne(['x', 'y']);
 $writer->insertAll($embedding);
 
-echo 'Embedding saved to ' . OUTPUT_FILE . '.' . PHP_EOL;
+echo 'Embedding saved to embedding.csv' . PHP_EOL;
