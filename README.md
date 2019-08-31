@@ -76,6 +76,7 @@ After applying Numeric String Converter, the categorical features such as gender
 
 In addition, it is a good practice to center and scale the data as it helps speed up the convergence of the Gradient Descent algorithm. To do so, we'll transform the dataset with the [Z Scale Standardizer](https://docs.rubixml.com/en/latest/transformers/z-scale-standardizer.html) prior to feeding it to Logistic Regression.
 
+### Instantiating the Learner
 Both of these transformations will be handled automatically by the [Pipeline](https://docs.rubixml.com/en/latest/pipeline.html) meta-estimator that wraps Logistic Regression.
 
 ```php
@@ -91,7 +92,6 @@ $estimator = new Pipeline([
 ], new LogisticRegression(200, new Adam(0.001)));
 ```
 
-### Instantiating the Learner
 You'll notice that [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) has a few parameters in its constructor. Those are are the *hyper-parameters* of the learner and they control the behavior of the algorithm during training and inference. For this example, we'll specify the first two hyper-parameters, the *batch size* and the Gradient Descent *optimizer* with *learning rate*.
 
 As previously mentioned, Logistic Regression trains using Gradient Descent. Specifically, it uses Mini-batch Gradient Descent which is a form of GD that feeds small batches of the randomized dataset into the learner which are then used to estimate the gradient of the loss function at each epoch. The size of the batch is determined by the *batch size* parameter. A small batch size typically trains faster but produces a rougher gradient. For our example, we'll choose 200 but feel free to play with this setting.
@@ -243,10 +243,10 @@ Here is an example of what a typical embedding looks like when plotted in 2 dime
 > **Note**: Due to the stochastic nature of the t-SNE algorithm, each embedding will look a little different from the last. The important information is contained in the overall *structure* of the data.
 
 ### Wrap Up
-- Data is passed in Rubix ML using [Dataset](https://docs.rubixml.com/en/latest/datasets/api.html) objects.
+- Data is passed in Rubix ML using specialized containers called [Dataset](https://docs.rubixml.com/en/latest/datasets/api.html) objects.
 - We can use [Transformers](https://docs.rubixml.com/en/latest/transformers/api.html) to get the data into the correct shape and format for the learner to understand.
 - [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) is a probabilistic classifier that uses a supervised learning algorithm called Gradient Descent under the hood.
-- [Cross Validation](https://docs.rubixml.com/en/latest/cross-validation/api.html) allows us to test the generalization performance of the trained estimator.
+- Cross Validation allows us to test the generalization performance of the trained estimator.
 - We can embed high-dimensional datasets into easily visualizable low-dimensional represenations using a process called [Manifold Learning](https://docs.rubixml.com/en/latest/embedders/api.html).
 
 ### Next Steps
