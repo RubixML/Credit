@@ -1,9 +1,8 @@
 # Credit Card Default Predictor
-
 An example Rubix ML project that is able to predict the probability of a customer defaulting on their credit card bill the next month using a [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset. We'll also vizualize the dataset using a manifold learning technique called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html).
 
 - **Difficulty:** Medium
-- **Training time:** < 3 Minutes
+- **Training time:** Minutes
 - **Memory needed:** < 1G
 
 ## Installation
@@ -123,7 +122,7 @@ $losses = $estimator->steps();
 
  The loss should be decreasing at each epoch and changes in the loss value should get smaller the closer the learner is to converging on the minimum of the cost function. As you can see, the Logistic Regression learns quickly at first and then gradually *lands* as it fine tunes the weights of the model for the best setting.
 
-![Cross Entropy Loss](https://raw.githubusercontent.com/RubixML/Credit/master/docs/images/cross-entropy-loss.svg?sanitize=true)
+![Cross Entropy Loss](https://raw.githubusercontent.com/RubixML/Credit/master/docs/images/training-loss.svg?sanitize=true)
 
 ### Cross Validation
 Once the learner has been trained, the next step is to determine if the final model can generalize well. For this process we'll need the testing data that we set aside earlier. We'll generate two reports that compare the predictions outputted by the estimator with the ground truth labels.
@@ -151,11 +150,9 @@ Then generate the report with the predictions and the labels.
 
 ```php
 $results = $report->generate($predictions, $testing->labels());
-
-var_dump($results);
 ```
 
-**Output**
+The output should look something like this.
 
 ```json
 {
