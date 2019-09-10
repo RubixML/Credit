@@ -83,19 +83,19 @@ use Rubix\ML\Pipeline;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Classifiers\LogisticRegression;
-use Rubix\ML\NeuralNet\Optimizers\Adam;
+use Rubix\ML\NeuralNet\Optimizers\StepDecay;
 
 $estimator = new Pipeline([
     new OneHotEncoder(),
     new ZScaleStandardizer(),
-], new LogisticRegression(200, new Adam(0.001)));
+], new LogisticRegression(200, new StepDecay(0.01, 100)));
 ```
 
 You'll notice that [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) has a few parameters in its constructor. Those are are the *hyper-parameters* of the learner and they control the behavior of the algorithm during training and inference. For this example, we'll specify the first two hyper-parameters, the *batch size* and the Gradient Descent *optimizer* with *learning rate*.
 
 As previously mentioned, Logistic Regression trains using Gradient Descent. Specifically, it uses Mini-batch Gradient Descent which is a form of GD that feeds small batches of the randomized dataset into the learner which are then used to estimate the gradient of the loss function at each epoch. The size of the batch is determined by the *batch size* parameter. A small batch size typically trains faster but produces a rougher gradient. For our example, we'll choose 200 but feel free to play with this setting.
 
-The next hyper-parameter is the Optimizer which controls the update step of the GD algorithm. The [Adam](https://docs.rubixml.com/en/latest/neural-network/optimizers/adam.html) optimizer is an adaptive optimizer that combines a momentum force and a buffering force to each parameter update. It uses a global *learning rate* that can be set by the user and typically ranges from 0.1 to 0.0001. The default setting of 0.001 works fairly well for this example.
+The next hyper-parameter is the Optimizer which controls the update step of the Gredient Descent algorithm. The [Step Decay](https://docs.rubixml.com/en/latest/neural-network/optimizers/step-decay.html) optimizer gradually decreases the learning rate by a given factor every n steps from its global setting. This allows training to be fast at first and then slow as it get closer to the minima of the gradient. We'll keep the default settings of 1e-3 decay every 100 steps with a starting rate of 0.01.
 
 ### Setting a Logger
 Since the Logistic Regression learner implements the [Verbose](https://docs.rubixml.com/en/latest/verbose.html) interface, we can hand it a [PSR-3](https://www.php-fig.org/psr/psr-3/) compatible logger and it will log helpful information for us. For the purposes of this example we will use the Screen logger that comes built-in with Rubix ML, but there are many great loggers to choose from such as [Monolog](https://github.com/Seldaek/monolog) and [Analog](https://github.com/jbroadway/analog) to name a couple.

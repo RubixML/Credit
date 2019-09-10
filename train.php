@@ -4,13 +4,12 @@ include __DIR__ . '/vendor/autoload.php';
 
 use Rubix\ML\Pipeline;
 use Rubix\ML\Datasets\Labeled;
-use Rubix\ML\Other\Loggers\Screen;
-use Rubix\ML\NeuralNet\Optimizers\Adam;
 use Rubix\ML\Transformers\OneHotEncoder;
-use Rubix\ML\Classifiers\LogisticRegression;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Transformers\NumericStringConverter;
-use Rubix\ML\NeuralNet\CostFunctions\CrossEntropy;
+use Rubix\ML\Classifiers\LogisticRegression;
+use Rubix\ML\NeuralNet\Optimizers\StepDecay;
+use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\CrossValidation\Reports\AggregateReport;
 use Rubix\ML\CrossValidation\Reports\ConfusionMatrix;
 use Rubix\ML\CrossValidation\Reports\MulticlassBreakdown;
@@ -51,7 +50,7 @@ $dataset->apply(new NumericStringConverter());
 $estimator = new Pipeline([
     new OneHotEncoder(),
     new ZScaleStandardizer(),
-], new LogisticRegression(200, new Adam(0.001)));
+], new LogisticRegression(200, new StepDecay(0.01, 100)));
 
 $estimator->setLogger(new Screen('credit'));
 
