@@ -33,7 +33,7 @@ In Rubix ML, data are passed in specialized containers called [Dataset objects](
 ```php
 use League\Csv\Reader;
 
-$reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
+$reader = Reader::createFromPath('dataset.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
@@ -190,7 +190,7 @@ As usual, we start by importing the dataset from its CSV file, but this time we 
 use League\Csv\Reader;
 use Rubix\ML\Datasets\Labeled;
 
-$reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
+$reader = Reader::createFromPath('/dataset.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
@@ -249,7 +249,7 @@ Here is an example of what a typical embedding looks like when plotted in 2 dime
 ### Next Steps
 The Logistic Regression estimator we just trained is able to achieve the same results as in the original paper, however, there are other models to choose from that may perform better. Consider the same problem using an ensemble method such as [AdaBoost](https://docs.rubixml.com/en/latest/classifiers/adaboost.html) or [Random Forest](https://docs.rubixml.com/en/latest/classifiers/random-forest.html) for your next step.
 
-## Presentation Slides
+## Slide Deck
 You can refer to the [slide deck](https://docs.google.com/presentation/d/1ZteG0Rf3siS_o-8x2r2AWw95ntcCggmmEHUfwQiuCnk/edit?usp=sharing) that accompanies this example project if you need extra help or a more in depth look at the math behind Logistic Regression, Gradient Descent, and the Cross Entropy cost function.
 
 ## Original Dataset
