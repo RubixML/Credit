@@ -2,11 +2,10 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
-use Rubix\ML\Pipeline;
 use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
-use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\Classifiers\LogisticRegression;
 use Rubix\ML\NeuralNet\Optimizers\StepDecay;
 use Rubix\ML\Other\Loggers\Screen;
@@ -20,7 +19,7 @@ ini_set('memory_limit', '-1');
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
-echo '║ Credit Card Default Predictor using Logistic Regression       ║' . PHP_EOL;
+echo '║ Credit Default Risk Predictor using Logistic Regression       ║' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
 echo PHP_EOL;
@@ -43,14 +42,13 @@ $labels = $reader->fetchColumn('default');
 
 $dataset = Labeled::fromIterator($samples, $labels);
 
-$dataset->apply(new NumericStringConverter());
+$dataset->apply(new NumericStringConverter())
+    ->apply(new OneHotEncoder())
+    ->apply(new ZScaleStandardizer());
 
 [$training, $testing] = $dataset->stratifiedSplit(0.8);
 
-$estimator = new Pipeline([
-    new OneHotEncoder(),
-    new ZScaleStandardizer(),
-], new LogisticRegression(200, new StepDecay(0.01, 100)));
+$estimator = new LogisticRegression(200, new StepDecay(0.01, 100));
 
 $estimator->setLogger(new Screen('credit'));
 

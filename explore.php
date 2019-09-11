@@ -2,12 +2,12 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
-use Rubix\ML\Embedders\TSNE;
 use Rubix\ML\Datasets\Labeled;
-use Rubix\ML\Other\Loggers\Screen;
+use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
-use Rubix\ML\Transformers\NumericStringConverter;
+use Rubix\ML\Embedders\TSNE;
+use Rubix\ML\Other\Loggers\Screen;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
@@ -38,11 +38,11 @@ $labels = $reader->fetchColumn('default');
 
 $dataset = Labeled::fromIterator($samples, $labels)->randomize()->head(1000);
 
-$dataset->apply(new NumericStringConverter());
-$dataset->apply(new OneHotEncoder());
-$dataset->apply(new ZScaleStandardizer());
+$dataset->apply(new NumericStringConverter())
+    ->apply(new OneHotEncoder())
+    ->apply(new ZScaleStandardizer());
 
-$embedder = new TSNE(2, 30);
+$embedder = new TSNE(2, 20.0, 20);
 
 $embedder->setLogger(new Screen('credit'));
 
