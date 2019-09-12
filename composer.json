@@ -6,7 +6,7 @@
     "license": "MIT",
     "keywords": [
         "php", "machine", "learning", "data", "science", "mining", "predictive", "modeling",
-        "ai", "classification", "neural", "net", "logistic-regression", "dataset"
+        "ai", "classification", "neural", "net", "logistic-regression", "dataset", "t-SNE"
     ],
     "authors": [
         {
