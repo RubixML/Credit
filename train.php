@@ -17,13 +17,6 @@ use League\Csv\Writer;
 
 ini_set('memory_limit', '-1');
 
-echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
-echo '║                                                               ║' . PHP_EOL;
-echo '║ Credit Default Risk Predictor using Logistic Regression       ║' . PHP_EOL;
-echo '║                                                               ║' . PHP_EOL;
-echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
-echo PHP_EOL;
-
 echo 'Loading data into memory ...' . PHP_EOL;
 
 $reader = Reader::createFromPath('dataset.csv')

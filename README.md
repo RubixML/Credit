@@ -1,5 +1,5 @@
 # Credit Card Default Predictor
-An example Rubix ML project that is able to predict the probability of a customer defaulting on their credit card bill the next month using a [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset. We'll also vizualize the dataset using a manifold learning technique called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html).
+An example Rubix ML project that is able to predict the probability of a customer defaulting on their credit card bill the next month using a [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset. We'll also describe the dataset using statistics and visualize it using a manifold learning technique called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html).
 
 - **Difficulty:** Medium
 - **Training time:** Minutes
@@ -181,11 +181,11 @@ The output should look something like this.
 }
 ```
 
-### Vizualizing the Dataset
-The dataset given to us has 25 features and after one hot encoding it becomes 93. Visualizing this type of high-dimensional data is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning*. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) to help us visualize the data by embedding it into just two dimensions.
+### Exploring the Dataset
+Exploratory data analysis is the process of using analytical techniques such as scatterplots and statistics to obtain a better understanding of the data. In this section, we'll describe the feature columns of the credit card dataset with statistics and we'll plot a low dimensional embedding of the dataset to visualize its structure.
 
 ### Extracting the Data
-As usual, we start by importing the dataset from its CSV file.
+As usual, we begin the script by importing the dataset from its CSV file, however, we won't need the labels this time.
 
 > **Note:** The source code for this example can be found in the [explore.php](https://github.com/RubixML/Housing/blob/master/explore.php) file in project root.
 
@@ -203,35 +203,85 @@ $samples = $reader->getRecords([
     'payment_3', 'payment_4', 'payment_5', 'payment_6', 'avg_balance',
     'avg_payment',
 ]);
-
-$labels = $reader->fetchColumn('default');
 ```
 
-This time, we are only going to use 1000 samples from the dataset. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. We'll randomize the dataset beforehand for good measure.
+Then, instantiate an [Unlabeled](https://docs.rubixml.com/en/latest/datasets/unlabeled.html) dataset object containing the samples.
 
 ```php
-use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\Datasets\Unlabeled;
 
-$dataset = Labeled::fromIterator($samples, $labels)->randomize()->head(1000);
+$dataset = Unlabeled::fromIterator($samples);
 ```
 
-### Dataset Preparation
-Since T-SNE is only compatible with continuous features, we can perform the necessary transformations on the dataset by passing the transformers to the `apply()` method on the dataset object like before.
+Remember that values are imported by CSV Reader as string types so we'll need to ensure that the numeric feature values get converted to their proper format before we go further.
 
 ```php
 use Rubix\ML\Transformers\NumericStringConverter;
+
+$dataset->apply(new NumericStringConverter());
+```
+
+### Describing the Dataset
+The dataset object makes has a `describe()` method that makes it simple to generate statistics for each type of feature column in the dataset all at once.
+
+```php
+$stats = $dataset->describe();
+```
+
+Here is the output of the first two feature columns. In this example, we can see that the first column `credit_limit` has a mean of 167,484 and is skewed to the left. We also know that column two `gender` contains two categories and that there are more females than males represented in this dataset.
+
+```json
+[
+    {
+        "column": 0,
+        "type": "continuous",
+        "mean": 167484.32266666667,
+        "variance": 16833894533.632648,
+        "std_dev": 129745.49908814814,
+        "skewness": 0.9928173164822339,
+        "kurtosis": 0.5359735300875466,
+        "min": 10000,
+        "25%": 50000,
+        "median": 140000,
+        "75%": 240000,
+        "max": 1000000
+    },
+    {
+        "column": 1,
+        "type": "categorical",
+        "top": "female",
+        "bottom": "male",
+        "num_categories": 2
+    }
+]
+```
+
+### Visualizing the Dataset
+The dataset given to us has 25 features and after one hot encoding it becomes 93. Visualizing this type of high-dimensional data is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning*. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) to help us visualize the data by embedding it into just two dimensions.
+
+### Dataset Preparation
+Next, we'll need to prepare the dataset for embedding since T-SNE is only compatible with continuous features. We can perform the necessary transformations on the dataset by passing the transformers to the `apply()` method on the dataset object like we did earlier in the tutorial.
+
+```php
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 
-$dataset->apply(new NumericStringConverter())
-    ->apply(new OneHotEncoder())
+$dataset->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer());
 ```
 
 > **Note:** Centering and standardizing the data with [Z Scale Standardizer](https://docs.rubixml.com/en/latest/transformers/z-scale-standardizer.html) or another standardizer is not always necessary, however, it just so happens that both Logistic Regression and t-SNE benefit when the data are centered and standardized.
 
+We don't need the entire dataset to generate a good sample embedding so we'll take 1000 random samples from the dataset and only embed those. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. We'll randomize the dataset beforehand for good measure.
+
+```php
+use Rubix\ML\Datasets\Labeled;
+
+$dataset = $dataset->randomize()->head(1000);
+```
+
 ### Instantiating the Embedder
-Now we'll instantiate a [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) embedder. T-SNE stands for t-Distributed Stochastic Neighbor Embedding and is a powerful dimensionality reduction technqiue suited for vizualization of high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to 2. The next hyper-parameter is the learning rate which we'll set to 20.0. The last hyper-parameter we'll set is called *perplexity* and can the thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. The value 20 works pretty well for this problem. Refer to the documentation for a full description of the hyper-parameters.
+T-SNE stands for t-Distributed Stochastic Neighbor Embedding and is a powerful dimensionality reduction technqiue suited for vizualization of high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to 2. The next hyper-parameter is the learning rate which we'll set to 20.0. The last hyper-parameter we'll set is called *perplexity* and can the thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. The value 20 works pretty well for this problem. Refer to the documentation for a full description of the hyper-parameters.
 
 ```php
 use Rubix\ML\Manifold\TSNE;
@@ -246,7 +296,7 @@ Lastly, pass the dataset to the `embed()` method on the [Embedder](https://docs.
 $embedding = $embedder->embed($dataset);
 ```
 
-Here is an example of what a typical embedding looks like when plotted in 2 dimensions. As you can see the samples form two distinct blobs that correspond to the group likely to *default* and the group likely to pay *on time*. If you wanted to, you could even plot the labels such that each point is colored accordingly to its class label.
+Here is an example of what a typical embedding looks like plotted in 2 dimensions. We are looking at the distances in high dimensions being preserved in 2 dimensions.
 
 ![t-SNE Embedding](https://raw.githubusercontent.com/RubixML/Credit/master/docs/images/embedding.svg?sanitize=true)
 

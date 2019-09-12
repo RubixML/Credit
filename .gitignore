@@ -5,6 +5,7 @@ embedding.csv
 report.json
 predictions.json
 probabilities.json
+stats.json
 *.model
 *.old
 .vscode

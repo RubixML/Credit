@@ -2,7 +2,7 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
-use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\Datasets\Unlabeled;
 use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
@@ -12,13 +12,6 @@ use League\Csv\Reader;
 use League\Csv\Writer;
 
 ini_set('memory_limit', '-1');
-
-echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
-echo '║                                                               ║' . PHP_EOL;
-echo '║ Credit Card Dataset Embedder using t-SNE                      ║' . PHP_EOL;
-echo '║                                                               ║' . PHP_EOL;
-echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
-echo PHP_EOL;
 
 echo 'Loading data into memory ...' . PHP_EOL;
 
@@ -34,12 +27,19 @@ $samples = $reader->getRecords([
     'avg_payment',
 ]);
 
-$labels = $reader->fetchColumn('default');
+$dataset = Unlabeled::fromIterator($samples);
 
-$dataset = Labeled::fromIterator($samples, $labels)->randomize()->head(1000);
+$dataset->apply(new NumericStringConverter());
 
-$dataset->apply(new NumericStringConverter())
-    ->apply(new OneHotEncoder())
+$stats = $dataset->describe();
+
+file_put_contents('stats.json', json_encode($stats, JSON_PRETTY_PRINT));
+
+echo 'Stats saved to stats.json' . PHP_EOL;
+
+$dataset = $dataset->randomize()->head(1000);
+
+$dataset->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer());
 
 $embedder = new TSNE(2, 20.0, 20);
