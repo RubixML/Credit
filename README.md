@@ -1,9 +1,9 @@
 # Credit Card Default Predictor
-An example Rubix ML project that is able to predict the probability of a customer defaulting on their credit card bill the next month using a [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset. We'll also describe the dataset using statistics and visualize it using a manifold learning technique called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html).
+An example Rubix ML project that is able to predict the probability of a customer defaulting on their credit card bill next month using a [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset of credit card customers. We'll also describe the dataset using statistics and visualize it using a manifold learning technique called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html).
 
 - **Difficulty:** Medium
 - **Training time:** Minutes
-- **Memory needed:** < 1G
+- **Memory needed:** 1G
 
 ## Installation
 
@@ -65,8 +65,6 @@ In addition, it is a good practice to center and scale the data as it helps spee
 
 To apply the transformations, call the `apply()` method on the dataset object with each transformer in the proper order.
 
-> **Note:** `apply()` returns self for convenient method chaining.
-
 ```php
 use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
@@ -77,7 +75,7 @@ $dataset->apply(new NumericStringConverter())
     ->apply(new ZScaleStandardizer());
 ```
 
-We'll need to set some of the data aside so that it can be used for testing. The reason we set the data aside rather than training the learner on all the data is because we want to be able to test the learner on samples it has never seen before. The `stratifiedSplit()` method on the Dataset object fairly splits the data into two subsets by a user-specified ratio. For this example, we'll use 80% of the data for training and hold out 20% for testing that we'll do later.
+We'll need to set some of the data aside so that it can be used for testing. The reason we separate the data rather than training the learner on all of the data is because we want to be able to test the learner on samples it has never seen before. The `stratifiedSplit()` method on the Dataset object fairly splits the data into two subsets by a user-specified ratio. For this example, we'll use 80% of the data for training and hold out 20% for testing that we'll do later.
 
 ```php
 [$training, $testing] = $dataset->stratifiedSplit(0.8);
@@ -321,4 +319,5 @@ Emails: (1) icyeh '@' chu.edu.tw (2) 140910 '@' mail.tku.edu.tw
 Institutions: (1) Department of Information Management, Chung Hua University, Taiwan. (2) Department of Civil Engineering, Tamkang University, Taiwan. other contact information: 886-2-26215656 ext. 3181
 
 ### References
-[1] Yeh, I. C., & Lien, C. H. (2009). The comparisons of data mining techniques for the predictive accuracy of probability of default of credit card clients. Expert Systems with Applications, 36(2), 2473-2480.
+>- Yeh, I. C., & Lien, C. H. (2009). The comparisons of data mining techniques for the predictive accuracy of probability of default of credit card clients. Expert Systems with Applications, 36(2), 2473-2480.
+>- Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.
