@@ -226,7 +226,7 @@ The dataset object makes has a `describe()` method that makes it simple to gener
 $stats = $dataset->describe();
 ```
 
-Here is the output of the first two feature columns. In this example, we can see that the first column `credit_limit` has a mean of 167,484 and is skewed to the left. We also know that column two `gender` contains two categories and that there are more females than males represented in this dataset.
+Here is the output of the first two feature columns. In this example, we can see that the first column `credit_limit` has a mean of 167,484 and is skewed to the left. We also know that column two `gender` contains two categories and that there are more females than males (60 / 40) represented in this dataset.
 
 ```json
 [
@@ -247,9 +247,11 @@ Here is the output of the first two feature columns. In this example, we can see
     {
         "column": 1,
         "type": "categorical",
-        "top": "female",
-        "bottom": "male",
-        "num_categories": 2
+        "num_categories": 2,
+        "probabilities": {
+            "female": 0.6037333333333333,
+            "male": 0.39626666666666666
+        }
     }
 ]
 ```
