@@ -1,7 +1,7 @@
 {
     "name": "rubix/credit",
     "type": "project",
-    "description": "An example project that predicts risk of credit card default using a Logistic Regression classifier and a 30,000 sample dataset.",
+    "description": "An example project that predicts risk of credit card default using a Logistic Regression classifier and a 30,000 sample dataset of credit card customers.",
     "homepage": "https://github.com/RubixML/Credit",
     "license": "MIT",
     "keywords": [

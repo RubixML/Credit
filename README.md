@@ -1,4 +1,4 @@
-# Credit Card Default Predictor
+# Rubix ML - Credit Card Default Predictor
 An example Rubix ML project that is able to predict the probability of a customer defaulting on their credit card bill next month using a [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset of credit card customers. We'll also describe the dataset using statistics and visualize it using a manifold learning technique called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html).
 
 - **Difficulty:** Medium
@@ -146,37 +146,93 @@ To generate the predictions for the report, call the `predict()` method on the e
 $predictions = $estimator->predict($testing);
 ```
 
-Then generate the report with the predictions and the labels.
+Then, generate the report with the predictions and the labels by calling the `generate()` method on the report instance.
 
 ```php
 $results = $report->generate($predictions, $testing->labels());
 ```
 
-The output should look something like this.
+The output of the report should look something like the output below. In this example, our classifier is 83% accurate with an F1 score of 0.69. In addition, the confusion matrix table shows that for every time we prediected yes we were correct 471 times and incorrect 170 times.
 
 ```json
-{
-    "overall": {
-        "accuracy": 0.8275287452091318,
-        "precision": 0.7854524313333155,
-        "recall": 0.6558631809497781,
-        "specificity": 0.6558631809497781,
-        "negative_predictive_value": 0.7854524313333155,
-        "false_discovery_rate": 0.2145475686666844,
-        "miss_rate": 0.34413681905022186,
-        "fall_out": 0.34413681905022186,
-        "false_omission_rate": 0.2145475686666844,
-        "f1_score": 0.6843061817340108,
-        "mcc": 0.42186027998596265,
-        "informedness": 0.31172636189955627,
-        "markedness": 0.5709048626666311,
-        "true_positives": 4966,
-        "true_negatives": 4966,
-        "false_positives": 1035,
-        "false_negatives": 1035,
-        "cardinality": 6001
+[
+    {
+        "overall": {
+            "accuracy": 0.8288618563572738,
+            "precision": 0.7874506659370852,
+            "recall": 0.6591447375205939,
+            "specificity": 0.6591447375205939,
+            "negative_predictive_value": 0.7874506659370852,
+            "false_discovery_rate": 0.21254933406291476,
+            "miss_rate": 0.3408552624794061,
+            "fall_out": 0.3408552624794061,
+            "false_omission_rate": 0.21254933406291476,
+            "f1_score": 0.6880266172924424,
+            "mcc": 0.42776751059741475,
+            "informedness": 0.31828947504118776,
+            "markedness": 0.5749013318741705,
+            "true_positives": 4974,
+            "true_negatives": 4974,
+            "false_positives": 1027,
+            "false_negatives": 1027,
+            "cardinality": 6001
+        },
+        "classes": {
+            "yes": {
+                "accuracy": 0.8288618563572738,
+                "precision": 0.734789391575663,
+                "recall": 0.3546686746987952,
+                "specificity": 0.9636208003423925,
+                "negative_predictive_value": 0.8401119402985074,
+                "false_discovery_rate": 0.26521060842433697,
+                "miss_rate": 0.6453313253012047,
+                "fall_out": 0.0363791996576075,
+                "false_omission_rate": 0.15988805970149256,
+                "f1_score": 0.47841543930929414,
+                "informedness": 0.31828947504118776,
+                "markedness": 0.5749013318741705,
+                "mcc": 0.42776751059741475,
+                "true_positives": 471,
+                "true_negatives": 4503,
+                "false_positives": 170,
+                "false_negatives": 857,
+                "cardinality": 1328,
+                "density": 0.22129645059156808
+            },
+            "no": {
+                "accuracy": 0.8288618563572738,
+                "precision": 0.8401119402985074,
+                "recall": 0.9636208003423925,
+                "specificity": 0.3546686746987952,
+                "negative_predictive_value": 0.734789391575663,
+                "false_discovery_rate": 0.15988805970149256,
+                "miss_rate": 0.0363791996576075,
+                "fall_out": 0.6453313253012047,
+                "false_omission_rate": 0.26521060842433697,
+                "f1_score": 0.8976377952755906,
+                "informedness": 0.31828947504118776,
+                "markedness": 0.5749013318741705,
+                "mcc": 0.42776751059741475,
+                "true_positives": 4503,
+                "true_negatives": 471,
+                "false_positives": 857,
+                "false_negatives": 170,
+                "cardinality": 4673,
+                "density": 0.7787035494084319
+            }
+        }
+    },
+    {
+        "yes": {
+            "yes": 471,
+            "no": 170
+        },
+        "no": {
+            "yes": 857,
+            "no": 4503
+        }
     }
-}
+]
 ```
 
 ### Exploring the Dataset
@@ -320,6 +376,6 @@ Contact: I-Cheng Yeh
 Emails: (1) icyeh '@' chu.edu.tw (2) 140910 '@' mail.tku.edu.tw  
 Institutions: (1) Department of Information Management, Chung Hua University, Taiwan. (2) Department of Civil Engineering, Tamkang University, Taiwan. other contact information: 886-2-26215656 ext. 3181
 
-### References
+## References
 >- Yeh, I. C., & Lien, C. H. (2009). The comparisons of data mining techniques for the predictive accuracy of probability of default of credit card clients. Expert Systems with Applications, 36(2), 2473-2480.
 >- Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.

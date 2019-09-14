@@ -15,6 +15,8 @@ use Rubix\ML\CrossValidation\Reports\MulticlassBreakdown;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
+use function Rubix\ML\array_transpose;
+
 ini_set('memory_limit', '-1');
 
 echo 'Loading data into memory ...' . PHP_EOL;
@@ -51,7 +53,7 @@ $losses = $estimator->steps();
 
 $writer = Writer::createFromPath('progress.csv', 'w+');
 $writer->insertOne(['loss']);
-$writer->insertAll(array_map(null, $losses, []));
+$writer->insertAll(array_transpose([$losses]));
 
 echo 'Progress saved to progress.csv' . PHP_EOL;
 
@@ -59,6 +61,8 @@ $report = new AggregateReport([
     new MulticlassBreakdown(),
     new ConfusionMatrix(),
 ]);
+
+echo 'Making predictions ...' . PHP_EOL;
 
 $predictions = $estimator->predict($testing);
 
