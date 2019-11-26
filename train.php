@@ -47,6 +47,8 @@ $estimator = new LogisticRegression(200, new StepDecay(0.01, 100));
 
 $estimator->setLogger(new Screen('credit'));
 
+echo 'Training ...' . PHP_EOL;
+
 $estimator->train($training);
 
 $losses = $estimator->steps();

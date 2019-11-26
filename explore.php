@@ -46,6 +46,8 @@ $embedder = new TSNE(2, 20.0, 20);
 
 $embedder->setLogger(new Screen('credit'));
 
+echo 'Embedding ...' . PHP_EOL;
+
 $embedding = $embedder->embed($dataset);
 
 $writer = Writer::createFromPath('embedding.csv', 'w+');
