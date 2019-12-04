@@ -33,8 +33,7 @@ In Rubix ML, data are passed in specialized containers called [Dataset objects](
 ```php
 use League\Csv\Reader;
 
-$reader = Reader::createFromPath('dataset.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
+$reader = Reader::createFromPath('dataset.csv')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
     'credit_limit', 'gender', 'education', 'marital_status', 'age',
@@ -245,8 +244,7 @@ We begin by importing the dataset from its CSV file, however, we won't need the 
 ```php
 use League\Csv\Reader;
 
-$reader = Reader::createFromPath('/dataset.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
+$reader = Reader::createFromPath('/dataset.csv')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
     'credit_limit', 'gender', 'education', 'marital_status', 'age',
