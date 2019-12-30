@@ -3,6 +3,7 @@
 include __DIR__ . '/vendor/autoload.php';
 
 use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
@@ -12,7 +13,6 @@ use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\CrossValidation\Reports\AggregateReport;
 use Rubix\ML\CrossValidation\Reports\ConfusionMatrix;
 use Rubix\ML\CrossValidation\Reports\MulticlassBreakdown;
-use League\Csv\Reader;
 use League\Csv\Writer;
 
 use function Rubix\ML\array_transpose;
@@ -21,22 +21,8 @@ ini_set('memory_limit', '-1');
 
 echo 'Loading data into memory ...' . PHP_EOL;
 
-$reader = Reader::createFromPath('dataset.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
-
-$samples = $reader->getRecords([
-    'credit_limit', 'gender', 'education', 'marital_status', 'age',
-    'timeliness_1', 'timeliness_2', 'timeliness_3', 'timeliness_4',
-    'timeliness_5', 'timeliness_6', 'balance_1', 'balance_2', 'balance_3',
-    'balance_4', 'balance_5', 'balance_6', 'payment_1', 'payment_2',
-    'payment_3', 'payment_4', 'payment_5', 'payment_6', 'avg_balance',
-    'avg_payment',
-]);
-
-$labels = $reader->fetchColumn('default');
-
-$dataset = Labeled::fromIterator($samples, $labels);
-
+$dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
+    
 $dataset->apply(new NumericStringConverter())
     ->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer());
@@ -54,6 +40,7 @@ $estimator->train($training);
 $losses = $estimator->steps();
 
 $writer = Writer::createFromPath('progress.csv', 'w+');
+
 $writer->insertOne(['loss']);
 $writer->insertAll(array_transpose([$losses]));
 

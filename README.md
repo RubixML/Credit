@@ -28,56 +28,33 @@ The dataset provided to us contains 30,000 labeled samples from customers of a T
 > **Note:** The source code for this example can be found in the [train.php](https://github.com/RubixML/Credit/blob/master/train.php) file in project root.
 
 ### Extracting the Data
-In Rubix ML, data are passed in specialized containers called [Dataset objects](https://docs.rubixml.com/en/latest/datasets/api.html). We'll start out by extracting the data provided in the `dataset.csv` file and then instantiating a [Labeled](https://docs.rubixml.com/en/latest/datasets/labeled.html) dataset object from it. We'll import the PHP League's [CSV reader](https://csv.thephpleague.com/) into our project to help extract the data from the CSV file.
-
-```php
-use League\Csv\Reader;
-
-$reader = Reader::createFromPath('dataset.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
-
-$samples = $reader->getRecords([
-    'credit_limit', 'gender', 'education', 'marital_status', 'age',
-    'timeliness_1', 'timeliness_2', 'timeliness_3', 'timeliness_4',
-    'timeliness_5', 'timeliness_6', 'balance_1', 'balance_2', 'balance_3',
-    'balance_4', 'balance_5', 'balance_6', 'payment_1', 'payment_2',
-    'payment_3', 'payment_4', 'payment_5', 'payment_6', 'avg_balance',
-    'avg_payment',
-]);
-
-$labels = $reader->fetchColumn('default');
-```
-
-Both the `getRecords()` and `fetchColumn()` methods return iterators which we'll use to load the samples and labels. Afterward, we can instantiate the dataset object using the `fromIterator()` static factory method.
+In Rubix ML, data are passed in specialized containers called [Dataset objects](https://docs.rubixml.com/en/latest/datasets/api.html). We'll start by extracting the data provided in the `dataset.csv` file using the built-in [CSV](https://docs.rubixml.com/en/latest/extractors/csv.html) extractor and then instantiating a [Labeled](https://docs.rubixml.com/en/latest/datasets/labeled.html) dataset object from it using the `fromIterator()` factory method.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\Extractors\CSV;
 
-$dataset = Labeled::fromIterator($samples, $labels);
+$dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
 ```
 
 ### Dataset Preparation
-Since the CSV Reader imports everything as a string by default, we'll need to convert the numeric types to their integer and floating point number counterparts before proceeding. Lucky for us, the [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) accomplishes this automatically. To apply the transformation, call the `apply()` method on the dataset object with the transformer as an argument.
+Since data types cannot be inferred from the CSV format, the entire dataset will be loaded in as strings. We'll need to convert the numeric types to their integer and floating point number counterparts before proceeding. Lucky for us, the [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) accomplishes this task automatically.
+
+The categorical features such as gender, education, and marital status - as well as the continuous features such as age and credit limit are now in the appropriate format. However, the Logistic Regression estimator is not compatible with categorical features directly so we'll need to [One Hot Encode](https://docs.rubixml.com/en/latest/transformers/one-hot-encoder.html) them to convert them into continuous ones. *One hot* encoding takes a categorical feature column and transforms the values into a vector of binary features where the feature that represents the active category is high (1) and all others are low (0).
+
+In addition, it is a good practice to center and scale the dataset as it helps speed up the convergence of the Gradient Descent learning algorithm. To do that, we'll chain another transformation to the dataset called [Z Scale Standardizer](https://docs.rubixml.com/en/latest/transformers/z-scale-standardizer.html) which standardizes the data by dividing each column over its Z score.
 
 ```php
 use Rubix\ML\Transformers\NumericStringConverter;
-
-$dataset->apply(new NumericStringConverter());
-```
-
-The categorical features such as gender, education, and marital status - as well as the continuous features such as age and credit limit are now in the appropriate format. However, the Logistic Regression estimator is not compatible with categorical features directly so we'll need to [One Hot Encode](https://docs.rubixml.com/en/latest/transformers/one-hot-encoder.html) them to convert them into continuous features.
-
-In addition, it is a good practice to center and scale the data as it helps speed up the convergence of the Gradient Descent algorithm. To do that, we'll chain another transformation called [Z Scale Standardizer](https://docs.rubixml.com/en/latest/transformers/z-scale-standardizer.html) prior to feeding it to Logistic Regression.
-
-```php
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 
-$dataset->apply(new OneHotEncoder())
+$dataset->apply(new NumericStringConverter())
+    ->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer());
 ```
 
-We'll need to set some of the data aside so that it can be used later for testing. The reason we separate the data rather than training the learner on all of the data is because we want to be able to test the learner on samples it has never seen before. The `stratifiedSplit()` method on the Dataset object fairly splits the dataset into two subsets by a user-specified ratio. For this example, we'll use 80% of the data for training and hold out 20% for testing.
+We'll need to set some of the data aside so that it can be used later for testing. The reason we separate the data rather than training the learner on *all* of the samples is because we want to be able to test the learner on samples it has never seen before. The `stratifiedSplit()` method on the Dataset object fairly splits the dataset into two subsets by a user-specified ratio. For this example, we'll use 80% of the data for training and hold out 20% for testing.
 
 ```php
 [$training, $testing] = $dataset->stratifiedSplit(0.8);
@@ -152,7 +129,7 @@ Then, generate the report with the predictions and the labels by calling the `ge
 $results = $report->generate($predictions, $testing->labels());
 ```
 
-The output of the report should look something like the output below. In this example, our classifier is 83% accurate with an F1 score of 0.69. In addition, the confusion matrix table shows that for every time we prediected `yes` we were correct 471 times and incorrect 170 times.
+The output of the report should look something like the output below. In this example, our classifier is 83% accurate with an F1 score of 0.69. In addition, the confusion matrix table shows that for every time we predicted `yes` we were correct 471 times and incorrect 170 times.
 
 ```json
 [
@@ -238,55 +215,31 @@ The output of the report should look something like the output below. In this ex
 ### Exploring the Dataset
 Exploratory data analysis is the process of using analytical techniques such as statistic and scatterplots to obtain a better understanding of the data. In this section, we'll describe the feature columns of the credit card dataset with statistics and then plot a low dimensional embedding of the dataset to visualize its structure.
 
-We begin by importing the dataset from its CSV file, however, we won't need the labels this time.
-
 > **Note:** The source code for this example can be found in the [explore.php](https://github.com/RubixML/Housing/blob/master/explore.php) file in project root.
 
-```php
-use League\Csv\Reader;
-
-$reader = Reader::createFromPath('/dataset.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
-
-$samples = $reader->getRecords([
-    'credit_limit', 'gender', 'education', 'marital_status', 'age',
-    'timeliness_1', 'timeliness_2', 'timeliness_3', 'timeliness_4',
-    'timeliness_5', 'timeliness_6', 'balance_1', 'balance_2', 'balance_3',
-    'balance_4', 'balance_5', 'balance_6', 'payment_1', 'payment_2',
-    'payment_3', 'payment_4', 'payment_5', 'payment_6', 'avg_balance',
-    'avg_payment',
-]);
-```
-
-Then, instantiate an [Unlabeled](https://docs.rubixml.com/en/latest/datasets/unlabeled.html) dataset object containing the samples.
+Begin by importing the credit card dataset and converting numerical strings like we did in a previous step.
 
 ```php
-use Rubix\ML\Datasets\Unlabeled;
-
-$dataset = Unlabeled::fromIterator($samples);
-```
-
-Remember that values are imported by CSV Reader as string types so we'll need the Numeric String Converter again.
-
-```php
+use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\NumericStringConverter;
 
-$dataset->apply(new NumericStringConverter());
+$dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
+    ->apply(new NumericStringConverter());
 ```
 
 ### Describing the Dataset
-The dataset object we instantiated has a `describe()` method that generates statistics for each type of feature column in the dataset. Probabilities will be calculated for each categorical feature value and statistics such as mean and standard deviation will be output from continuous feature columns.
+The dataset object we instantiated has a `describe()` method that generates statistics for each feature column in the dataset. Category densities will be calculated for each categorical feature value and statistics such as mean, median, and standard deviation will be output for the continuous feature columns.
 
 ```php
 $stats = $dataset->describe();
 ```
 
-Here is the output of the first two feature columns in the credit card dataset. We can see that the first column `credit_limit` has a mean of 167,484 and the distribution of values is skewed to the left. We also know that column two `gender` contains two categories and that there are more females than males (60 / 40) represented in this dataset.
+Here is the output of the first two columns in the credit card dataset. We can see that the first column `credit_limit` has a mean of 167,484 and the distribution of values is skewed to the left. We also know that column two `gender` contains two categories and that there are more females than males (60 / 40) represented in this dataset. Generate and examine the dataset stats for yourself and see if you can identify any other interesting characteristics of the dataset.
 
 ```json
 [
     {
-        "column": 0,
         "type": "continuous",
         "mean": 167484.32266666667,
         "variance": 16833894533.632648,
@@ -300,10 +253,9 @@ Here is the output of the first two feature columns in the credit card dataset. 
         "max": 1000000
     },
     {
-        "column": 1,
         "type": "categorical",
         "num_categories": 2,
-        "probabilities": {
+        "densities": {
             "female": 0.6037333333333333,
             "male": 0.39626666666666666
         }
@@ -312,7 +264,7 @@ Here is the output of the first two feature columns in the credit card dataset. 
 ```
 
 ### Visualizing the Dataset
-The credit card dataset has 25 features and after one hot encoding it becomes 93. Thus, the vector space for this dataset is *93-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) to help us visualize the data by embedding it into  two dimensions.
+The credit card dataset has 25 features and after one hot encoding it becomes 93. Thus, the vector space for this dataset is *93-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) to help us visualize the data by embedding it into  only two dimensions.
 
 Before we continue, we'll need to prepare the dataset for embedding since, like Logistic Regression, T-SNE is only compatible with continuous features. We can perform the necessary transformations on the dataset by passing the transformers to the `apply()` method on the dataset object like we did earlier in the tutorial.
 
@@ -326,7 +278,7 @@ $dataset->apply(new OneHotEncoder())
 
 > **Note:** Centering and standardizing the data with [Z Scale Standardizer](https://docs.rubixml.com/en/latest/transformers/z-scale-standardizer.html) or another standardizer is not always necessary, however, it just so happens that both Logistic Regression and t-SNE benefit when the data are centered and standardized.
 
-We don't need the entire dataset to generate a good sample embedding so we'll take 1000 random samples from the dataset and only embed those. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. We'll randomize the dataset beforehand for good measure.
+We don't need the entire dataset to generate a decent embedding so we'll take 1,000 random samples from the dataset and only embed those. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
@@ -335,7 +287,7 @@ $dataset = $dataset->randomize()->head(1000);
 ```
 
 ### Instantiating the Embedder
-T-SNE stands for t-Distributed Stochastic Neighbor Embedding and is a powerful non-linear dimensionality reduction technqiue suited for vizualizing of high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to the integer `2`. The next hyper-parameter is the learning rate which we'll set to `20.0`. The last hyper-parameter we'll set is called the *perplexity* and can the thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. The value `20` works pretty well for this problem. Refer to the documentation for a full description of the hyper-parameters.
+[T-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) stands for t-Distributed Stochastic Neighbor Embedding and is a powerful non-linear dimensionality reduction algorithm suited for visualizing high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to the integer `2`. The next hyper-parameter is the learning rate which controls the rate at which the embedder updates the target embedding. The last hyper-parameter we'll set is called the *perplexity* and can the thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. Refer to the documentation for a full description of the hyper-parameters.
 
 ```php
 use Rubix\ML\Manifold\TSNE;
@@ -344,20 +296,20 @@ $embedder = new TSNE(2, 20.0, 20);
 ```
 
 ### Embedding the Dataset
-Lastly, pass the dataset to the `embed()` method on the [Embedder](https://docs.rubixml.com/en/latest/embedders/api.html) instance to return an array of samples in two dimensions.
+Pass the dataset to the `embed()` method on the [Embedder](https://docs.rubixml.com/en/latest/embedders/api.html) instance to return an array of embedded samples.
 
 ```php
 $embedding = $embedder->embed($dataset);
 ```
 
-Here is an example of what a typical embedding looks like plotted in 2 dimensions. As you can see, the distances in high dimensions are preserved in the embedding.
+Here is an example of what a typical 2-dimensional embedding looks like when plotted.
 
 ![t-SNE Embedding](https://raw.githubusercontent.com/RubixML/Credit/master/docs/images/embedding.svg?sanitize=true)
 
 > **Note**: Due to the stochastic nature of the t-SNE algorithm, every embedding will look a little different from the last. The important information is contained in the overall *structure* of the data.
 
 ### Next Steps
-Congratualtions on completing the tutorial! The Logistic Regression estimator we just trained is able to achieve the same results as in the original paper, however, there are other estimators in Rubix ML to choose from that may perform better. Consider the same problem using an ensemble method such as [AdaBoost](https://docs.rubixml.com/en/latest/classifiers/adaboost.html) or [Random Forest](https://docs.rubixml.com/en/latest/classifiers/random-forest.html) as a next step.
+Congratulations on completing the tutorial! The Logistic Regression estimator we just trained is able to achieve the same results as in the original paper, however, there are other estimators in Rubix ML to choose from that may perform better. Consider the same problem using an ensemble method such as [AdaBoost](https://docs.rubixml.com/en/latest/classifiers/adaboost.html) or [Random Forest](https://docs.rubixml.com/en/latest/classifiers/random-forest.html) as a next step.
 
 ## Slide Deck
 You can refer to the [slide deck](https://docs.google.com/presentation/d/1ZteG0Rf3siS_o-8x2r2AWw95ntcCggmmEHUfwQiuCnk/edit?usp=sharing) that accompanies this example project if you need extra help or a more in depth look at the math behind Logistic Regression, Gradient Descent, and the Cross Entropy cost function.
