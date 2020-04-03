@@ -29,7 +29,7 @@ $dataset->apply(new NumericStringConverter())
 
 [$training, $testing] = $dataset->stratifiedSplit(0.8);
 
-$estimator = new LogisticRegression(200, new StepDecay(0.01, 100));
+$estimator = new LogisticRegression(256, new StepDecay(0.01, 100));
 
 $estimator->setLogger(new Screen('credit'));
 

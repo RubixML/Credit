@@ -63,7 +63,7 @@ We'll need to set some of the data aside so that it can be used later for testin
 ### Instantiating the Learner
 You'll notice that [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) has a few parameters to consider. These parameters are called *hyper-parameters* as they have a global effect on the behavior of the algorithm during training and inference. For this example, we'll specify the first three hyper-parameters, the *batch size* and the Gradient Descent *optimizer* with its *learning rate*.
 
-As previously mentioned, Logistic Regression trains using an algorithm called Gradient Descent. Specifically, it uses a form of GD called *Mini-batch* Gradient Descent that feeds small batches of the randomized dataset through the learner at a time. The size of the batch is determined by the *batch size* hyper-parameter. A small batch size typically trains faster but produces a rougher gradient for the learner to traverse. For our example, we'll pick 200 samples per batch but feel free to play with this setting on your own.
+As previously mentioned, Logistic Regression trains using an algorithm called Gradient Descent. Specifically, it uses a form of GD called *Mini-batch* Gradient Descent that feeds small batches of the randomized dataset through the learner at a time. The size of the batch is determined by the *batch size* hyper-parameter. A small batch size typically trains faster but produces a rougher gradient for the learner to traverse. For our example, we'll pick 256 samples per batch but feel free to play with this setting on your own.
 
 The next hyper-parameter is the GD Optimizer which controls the update step of the algorithm. Most optimizers have a global learning rate setting that allows you to control the size of each Gradient Descent step. The [Step Decay](https://docs.rubixml.com/en/latest/neural-network/optimizers/step-decay.html) optimizer gradually decreases the learning rate by a given factor every *n* steps from its global setting. This allows training to be fast at first and then slow down as it get closer to reaching the minima of the gradient. We'll choose to decay the learning rate every 100 steps with a starting rate of 0.01. To instantiate the learner, pass the hyper-parameters to the Logistic Regression constructor.
 
@@ -71,7 +71,7 @@ The next hyper-parameter is the GD Optimizer which controls the update step of t
 use Rubix\ML\Classifiers\LogisticRegression;
 use Rubix\ML\NeuralNet\Optimizers\StepDecay;
 
-$estimator = new LogisticRegression(200, new StepDecay(0.01, 100));
+$estimator = new LogisticRegression(256, new StepDecay(0.01, 100));
 ```
 
 ### Setting a Logger
