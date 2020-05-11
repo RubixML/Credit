@@ -9,7 +9,6 @@ use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Embedders\TSNE;
 use Rubix\ML\Other\Loggers\Screen;
-use League\Csv\Writer;
 
 ini_set('memory_limit', '-1');
 
