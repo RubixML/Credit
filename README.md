@@ -290,16 +290,22 @@ $dataset = $dataset->randomize()->head(1000);
 [T-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) stands for t-Distributed Stochastic Neighbor Embedding and is a powerful non-linear dimensionality reduction algorithm suited for visualizing high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to the integer `2`. The next hyper-parameter is the learning rate which controls the rate at which the embedder updates the target embedding. The last hyper-parameter we'll set is called the *perplexity* and can the thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. Refer to the documentation for a full description of the hyper-parameters.
 
 ```php
-use Rubix\ML\Manifold\TSNE;
+use Rubix\ML\Embedders\TSNE;
 
 $embedder = new TSNE(2, 20.0, 20);
 ```
 
 ### Embedding the Dataset
-Pass the dataset to the `embed()` method on the [Embedder](https://docs.rubixml.com/en/latest/embedders/api.html) instance to return an array of embedded samples.
+Since an Embedder is a [Transformer](https://docs.rubixml.com/en/latest/transformers/api.md) at heart, you can use the newly instantiated t-SNE embedder to embed the samples in a dataset using the `apply()` method.
 
 ```php
-$embedding = $embedder->embed($dataset);
+$dataset->apply($embedder);
+```
+
+When the embedding is complete, we can save the dataset to a file so we can open it later in our favorite plotting software.
+
+```php
+file_put_contents('embedding.csv', $dataset->toCsv());
 ```
 
 Here is an example of what a typical 2-dimensional embedding looks like when plotted.

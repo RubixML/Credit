@@ -24,10 +24,7 @@ file_put_contents('stats.json', json_encode($stats, JSON_PRETTY_PRINT));
 
 echo 'Stats saved to stats.json' . PHP_EOL;
 
-$dataset = $dataset->randomize()->head(1000);
-
-$dataset->apply(new OneHotEncoder())
-    ->apply(new ZScaleStandardizer());
+$dataset = $dataset->randomize()->head(2000);
 
 $embedder = new TSNE(2, 20.0, 20);
 
@@ -35,11 +32,10 @@ $embedder->setLogger(new Screen('credit'));
 
 echo 'Embedding ...' . PHP_EOL;
 
-$embedding = $embedder->embed($dataset);
+$dataset->apply(new OneHotEncoder())
+    ->apply(new ZScaleStandardizer())
+    ->apply($embedder);
 
-$writer = Writer::createFromPath('embedding.csv', 'w+');
-
-$writer->insertOne(['x', 'y']);
-$writer->insertAll($embedding);
+file_put_contents('embedding.csv', $dataset->toCsv());
 
 echo 'Embedding saved to embedding.csv' . PHP_EOL;
