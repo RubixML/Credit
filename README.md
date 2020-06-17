@@ -3,10 +3,15 @@ An example Rubix ML project that predicts the probability of a customer defaulti
 
 - **Difficulty:** Medium
 - **Training time:** Minutes
-- **Memory needed:** 1G
+
+## Requirements
+- [PHP](https://php.net) 7.2 or above
+
+#### Recommended
+- [Tensor extension](https://github.com/RubixML/Tensor) for faster training and inference
+- 1G of system memory or more
 
 ## Installation
-
 Clone the repository locally using [Git](https://git-scm.com/):
 ```sh
 $ git clone https://github.com/RubixML/Credit
@@ -16,9 +21,6 @@ Install dependencies using [Composer](https://getcomposer.org/):
 ```sh
 $ composer install
 ```
-
-## Requirements
-- [PHP](https://php.net) 7.2 or above
 
 ## Tutorial
 
@@ -328,3 +330,6 @@ Institutions: (1) Department of Information Management, Chung Hua University, Ta
 ## References
 >- Yeh, I. C., & Lien, C. H. (2009). The comparisons of data mining techniques for the predictive accuracy of probability of default of credit card clients. Expert Systems with Applications, 36(2), 2473-2480.
 >- Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.
+
+## License
+The code is licensed [Apache 2.0](LICENSE.md) and the tutorial is licensed [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).

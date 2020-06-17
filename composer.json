@@ -1,12 +1,14 @@
 {
     "name": "rubix/credit",
     "type": "project",
-    "description": "An example project that predicts risk of credit card default using a Logistic Regression classifier and a 30,000 sample dataset of credit card customers.",
+    "description": "An example project that predicts the risk of credit card default using a Logistic Regression classifier and a 30,000 sample dataset of credit card customers.",
     "homepage": "https://github.com/RubixML/Credit",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "keywords": [
-        "php", "machine", "learning", "data", "science", "mining", "predictive", "modeling",
-        "ai", "classification", "neural", "net", "logistic-regression", "dataset", "t-SNE"
+        "classification", "classifier", "credit score", "cross validation", "dataset", "data science",
+        "data visualization", "default risk prediction", "dimensionality reduction", "example project",
+        "logistic regression", "machine learning", "manifold learning", "ml", "one hot", "php", "php ml",
+        "rubix ml", "rubixml", "t sne", "t-sne", "tutorial"
     ],
     "authors": [
         {
