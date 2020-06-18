@@ -4,23 +4,18 @@ An example Rubix ML project that predicts the probability of a customer defaulti
 - **Difficulty:** Medium
 - **Training time:** Minutes
 
+## Installation
+Clone the project locally using [Composer](https://getcomposer.org/):
+```sh
+$ composer create-project rubix/credit
+```
+
 ## Requirements
 - [PHP](https://php.net) 7.2 or above
 
 #### Recommended
 - [Tensor extension](https://github.com/RubixML/Tensor) for faster training and inference
 - 1G of system memory or more
-
-## Installation
-Clone the repository locally using [Git](https://git-scm.com/):
-```sh
-$ git clone https://github.com/RubixML/Credit
-```
-
-Install dependencies using [Composer](https://getcomposer.org/):
-```sh
-$ composer install
-```
 
 ## Tutorial
 
@@ -129,6 +124,11 @@ Then, generate the report with the predictions and the labels by calling the `ge
 
 ```php
 $results = $report->generate($predictions, $testing->labels());
+```
+
+Now we're ready to execute the training script and view the validation results.
+```sh
+$ php train.php
 ```
 
 The output of the report should look something like the output below. In this example, our classifier is 83% accurate with an F1 score of 0.69. In addition, the confusion matrix table shows that for every time we predicted `yes` we were correct 471 times and incorrect 170 times.
@@ -308,6 +308,11 @@ When the embedding is complete, we can save the dataset to a file so we can open
 
 ```php
 file_put_contents('embedding.csv', $dataset->toCsv());
+```
+
+Now we're ready to execute the explore script and plot the embedding using our favorite plotting software.
+```sh
+$ php explore.php
 ```
 
 Here is an example of what a typical 2-dimensional embedding looks like when plotted.

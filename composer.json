@@ -23,8 +23,17 @@
         "league/csv": "^9.5",
         "rubix/ml": "0.1.0-rc3"
     },
+    "suggest": {
+        "ext-tensor": "For faster training and inference"
+    },
+    "scripts": {
+        "explore": "@php explore.php",
+        "train": "@php train.php"
+    },
     "config": {
         "preferred-install": "dist",
         "sort-packages": true
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
