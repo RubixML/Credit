@@ -13,7 +13,7 @@ use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\CrossValidation\Reports\AggregateReport;
 use Rubix\ML\CrossValidation\Reports\ConfusionMatrix;
 use Rubix\ML\CrossValidation\Reports\MulticlassBreakdown;
-use League\Csv\Writer;
+use Rubix\ML\Datasets\Unlabeled;
 
 use function Rubix\ML\array_transpose;
 
@@ -21,9 +21,8 @@ ini_set('memory_limit', '-1');
 
 echo 'Loading data into memory ...' . PHP_EOL;
 
-$dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
-    
-$dataset->apply(new NumericStringConverter())
+$dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
+    ->apply(new NumericStringConverter())
     ->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer());
 
@@ -31,7 +30,7 @@ $dataset->apply(new NumericStringConverter())
 
 $estimator = new LogisticRegression(128, new StepDecay(0.01, 100));
 
-$estimator->setLogger(new Screen('credit'));
+$estimator->setLogger(new Screen());
 
 echo 'Training ...' . PHP_EOL;
 
@@ -39,10 +38,9 @@ $estimator->train($training);
 
 $losses = $estimator->steps();
 
-$writer = Writer::createFromPath('progress.csv', 'w+');
-
-$writer->insertOne(['loss']);
-$writer->insertAll(array_transpose([$losses]));
+Unlabeled::build(array_transpose([$losses]))
+    ->toCSV(['losses'])
+    ->write('progress.csv');
 
 echo 'Progress saved to progress.csv' . PHP_EOL;
 
@@ -57,6 +55,8 @@ $predictions = $estimator->predict($testing);
 
 $results = $report->generate($predictions, $testing->labels());
 
-file_put_contents('report.json', json_encode($results, JSON_PRETTY_PRINT));
+echo $results;
+
+$results->toJSON()->write('report.json');
 
 echo 'Report saved to report.json' . PHP_EOL;

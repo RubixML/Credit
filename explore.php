@@ -19,7 +19,9 @@ $dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
 
 $stats = $dataset->describe();
 
-file_put_contents('stats.json', json_encode($stats, JSON_PRETTY_PRINT));
+echo $stats;
+
+$stats->toJSON()->write('stats.json');
 
 echo 'Stats saved to stats.json' . PHP_EOL;
 
@@ -27,14 +29,14 @@ $dataset = $dataset->randomize()->head(2000);
 
 $embedder = new TSNE(2, 20.0, 20);
 
-$embedder->setLogger(new Screen('credit'));
+$embedder->setLogger(new Screen());
 
 echo 'Embedding ...' . PHP_EOL;
 
 $dataset->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer())
-    ->apply($embedder);
-
-file_put_contents('embedding.csv', $dataset->toCsv());
+    ->apply($embedder)
+    ->toCSV(['x', 'y', 'label'])
+    ->write('embedding.csv');
 
 echo 'Embedding saved to embedding.csv' . PHP_EOL;

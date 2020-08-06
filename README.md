@@ -77,7 +77,7 @@ Since Logistic Regression implements the [Verbose](https://docs.rubixml.com/en/l
 ```php
 use Rubix\ML\Other\Loggers\Screen;
 
-$estimator->setLogger(new Screen('credit'));
+$estimator->setLogger(new Screen());
 ```
 
 ### Training
@@ -231,10 +231,12 @@ $dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
 ```
 
 ### Describing the Dataset
-The dataset object we instantiated has a `describe()` method that generates statistics for each feature column in the dataset. Category densities will be calculated for each categorical feature value and statistics such as mean, median, and standard deviation will be output for the continuous feature columns.
+The dataset object we instantiated has a `describe()` method that generates statistics for each feature column in the dataset. Category densities will be calculated for each categorical feature value and statistics such as mean, median, and standard deviation will be output for the continuous feature columns. The return value is a report object that can be echoed out to the terminal.
 
 ```php
 $stats = $dataset->describe();
+
+echo $stats;
 ```
 
 Here is the output of the first two columns in the credit card dataset. We can see that the first column `credit_limit` has a mean of 167,484 and the distribution of values is skewed to the left. We also know that column two `gender` contains two categories and that there are more females than males (60 / 40) represented in this dataset. Generate and examine the dataset stats for yourself and see if you can identify any other interesting characteristics of the dataset.
@@ -265,27 +267,21 @@ Here is the output of the first two columns in the credit card dataset. We can s
 ]
 ```
 
-### Visualizing the Dataset
-The credit card dataset has 25 features and after one hot encoding it becomes 93. Thus, the vector space for this dataset is *93-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) to help us visualize the data by embedding it into  only two dimensions.
-
-Before we continue, we'll need to prepare the dataset for embedding since, like Logistic Regression, T-SNE is only compatible with continuous features. We can perform the necessary transformations on the dataset by passing the transformers to the `apply()` method on the dataset object like we did earlier in the tutorial.
+In addition, we'll save the stats to a JSON file so we can reference it later.
 
 ```php
-use Rubix\ML\Transformers\OneHotEncoder;
-use Rubix\ML\Transformers\ZScaleStandardizer;
-
-$dataset->apply(new OneHotEncoder())
-    ->apply(new ZScaleStandardizer());
+$stats->toJSON()->write('stats.json');
 ```
 
-> **Note:** Centering and standardizing the data with [Z Scale Standardizer](https://docs.rubixml.com/en/latest/transformers/z-scale-standardizer.html) or another standardizer is not always necessary, however, it just so happens that both Logistic Regression and t-SNE benefit when the data are centered and standardized.
+### Visualizing the Dataset
+The credit card dataset has 25 features and after one hot encoding it becomes 93. Thus, the vector space for this dataset is *93-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) to help us visualize the data by embedding it into only two dimensions.
 
-We don't need the entire dataset to generate a decent embedding so we'll take 1,000 random samples from the dataset and only embed those. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
+We don't need the entire dataset to generate a decent embedding so we'll take 2,000 random samples from the dataset and only embed those. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
 
-$dataset = $dataset->randomize()->head(1000);
+$dataset = $dataset->randomize()->head(2000);
 ```
 
 ### Instantiating the Embedder
@@ -298,6 +294,18 @@ $embedder = new TSNE(2, 20.0, 20);
 ```
 
 ### Embedding the Dataset
+Before we continue, we'll need to prepare the dataset for embedding since, like Logistic Regression, T-SNE is only compatible with continuous features. We can perform the necessary transformations on the dataset by passing the transformers to the `apply()` method on the dataset object like we did earlier in the tutorial.
+
+```php
+use Rubix\ML\Transformers\OneHotEncoder;
+use Rubix\ML\Transformers\ZScaleStandardizer;
+
+$dataset->apply(new OneHotEncoder())
+    ->apply(new ZScaleStandardizer());
+```
+
+> **Note:** Centering and standardizing the data with [Z Scale Standardizer](https://docs.rubixml.com/en/latest/transformers/z-scale-standardizer.html) or another standardizer is not always necessary, however, it just so happens that both Logistic Regression and t-SNE benefit when the data are centered and standardized.
+
 Since an Embedder is a [Transformer](https://docs.rubixml.com/en/latest/transformers/api.md) at heart, you can use the newly instantiated t-SNE embedder to embed the samples in a dataset using the `apply()` method.
 
 ```php
@@ -307,7 +315,7 @@ $dataset->apply($embedder);
 When the embedding is complete, we can save the dataset to a file so we can open it later in our favorite plotting software.
 
 ```php
-file_put_contents('embedding.csv', $dataset->toCsv());
+$dataset->toCSV()->write('embedding.csv');
 ```
 
 Now we're ready to execute the explore script and plot the embedding using our favorite plotting software.
