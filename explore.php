@@ -12,7 +12,9 @@ use Rubix\ML\Other\Loggers\Screen;
 
 ini_set('memory_limit', '-1');
 
-echo 'Loading data into memory ...' . PHP_EOL;
+$logger = new Screen();
+
+$logger->info('Loading data into memory');
 
 $dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
     ->apply(new NumericStringConverter());
@@ -23,15 +25,13 @@ echo $stats;
 
 $stats->toJSON()->write('stats.json');
 
-echo 'Stats saved to stats.json' . PHP_EOL;
+$logger->info('Stats saved to stats.json');
 
 $dataset = $dataset->randomize()->head(2000);
 
 $embedder = new TSNE(2, 20.0, 20);
 
-$embedder->setLogger(new Screen());
-
-echo 'Embedding ...' . PHP_EOL;
+$embedder->setLogger($logger);
 
 $dataset->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer())
@@ -39,4 +39,4 @@ $dataset->apply(new OneHotEncoder())
     ->toCSV(['x', 'y', 'label'])
     ->write('embedding.csv');
 
-echo 'Embedding saved to embedding.csv' . PHP_EOL;
+$logger->info('Embedding saved to embedding.csv');

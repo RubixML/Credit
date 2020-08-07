@@ -19,7 +19,9 @@ use function Rubix\ML\array_transpose;
 
 ini_set('memory_limit', '-1');
 
-echo 'Loading data into memory ...' . PHP_EOL;
+$logger = new Screen();
+
+$logger->info('Loading data into memory');
 
 $dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
     ->apply(new NumericStringConverter())
@@ -30,9 +32,7 @@ $dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
 
 $estimator = new LogisticRegression(128, new StepDecay(0.01, 100));
 
-$estimator->setLogger(new Screen());
-
-echo 'Training ...' . PHP_EOL;
+$estimator->setLogger($logger);
 
 $estimator->train($training);
 
@@ -42,14 +42,14 @@ Unlabeled::build(array_transpose([$losses]))
     ->toCSV(['losses'])
     ->write('progress.csv');
 
-echo 'Progress saved to progress.csv' . PHP_EOL;
+$logger->info('Progress saved to progress.csv');
 
 $report = new AggregateReport([
     new MulticlassBreakdown(),
     new ConfusionMatrix(),
 ]);
 
-echo 'Making predictions ...' . PHP_EOL;
+$logger->info('Making predictions');
 
 $predictions = $estimator->predict($testing);
 
@@ -59,4 +59,4 @@ echo $results;
 
 $results->toJSON()->write('report.json');
 
-echo 'Report saved to report.json' . PHP_EOL;
+$logger->info('Report saved to report.json');
