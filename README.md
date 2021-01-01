@@ -96,7 +96,7 @@ $losses = $estimator->steps();
 
 You'll notice that the loss should be decreasing at each epoch and changes in the loss value should get smaller the closer the learner is to converging on the minimum of the cost function.
 
-![Cross Entropy Loss](https://raw.githubusercontent.com/RubixML/Credit/master/docs/images/training-loss.svg?sanitize=true)
+![Cross Entropy Loss](https://raw.githubusercontent.com/RubixML/Credit/master/docs/images/training-loss.png)
 
 ### Cross Validation
 Once the learner has been trained, the next step is to determine if the final model can generalize well to the real world. For this process, we'll need the testing data that we set aside earlier. We'll go ahead and generate two reports that compare the predictions outputted by the estimator with the ground truth labels from the testing set.
@@ -276,12 +276,12 @@ $stats->toJSON()->write('stats.json');
 ### Visualizing the Dataset
 The credit card dataset has 25 features and after one hot encoding it becomes 93. Thus, the vector space for this dataset is *93-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) to help us visualize the data by embedding it into only two dimensions.
 
-We don't need the entire dataset to generate a decent embedding so we'll take 2,000 random samples from the dataset and only embed those. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
+We don't need the entire dataset to generate a decent embedding so we'll take 2,500 random samples from the dataset and only embed those. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
 
-$dataset = $dataset->randomize()->head(2000);
+$dataset = $dataset->randomize()->head(2500);
 ```
 
 ### Instantiating the Embedder
@@ -325,7 +325,7 @@ $ php explore.php
 
 Here is an example of what a typical 2-dimensional embedding looks like when plotted.
 
-![t-SNE Embedding](https://raw.githubusercontent.com/RubixML/Credit/master/docs/images/embedding.svg?sanitize=true)
+![t-SNE Embedding](https://raw.githubusercontent.com/RubixML/Credit/master/docs/images/embedding.png)
 
 > **Note**: Due to the stochastic nature of the t-SNE algorithm, every embedding will look a little different from the last. The important information is contained in the overall *structure* of the data.
 
@@ -345,4 +345,4 @@ Institutions: (1) Department of Information Management, Chung Hua University, Ta
 >- Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA: University of California, School of Information and Computer Science.
 
 ## License
-The code is licensed [MIT](LICENSE.md) and the tutorial is licensed [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
+The code is licensed [MIT](LICENSE) and the tutorial is licensed [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).

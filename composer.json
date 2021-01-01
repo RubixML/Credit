@@ -3,7 +3,7 @@
     "type": "project",
     "description": "An example project that predicts the risk of credit card default using a Logistic Regression classifier and a 30,000 sample dataset of credit card customers.",
     "homepage": "https://github.com/RubixML/Credit",
-    "license": "Apache-2.0",
+    "license": "MIT",
     "keywords": [
         "classification", "classifier", "credit score", "cross validation", "dataset", "data science",
         "data visualization", "default risk prediction", "dimensionality reduction", "example project",
@@ -13,17 +13,13 @@
     "authors": [
         {
             "name": "Andrew DalPino",
-            "email": "me@andrewdalpino.com",
-            "homepage": "https://andrewdalpino.com",
+            "homepage": "https://github.com/andrewdalpino",
             "role": "Lead Engineer"
         }
     ],
     "require": {
         "php": ">=7.2",
-        "rubix/ml": "^0.1.0"
-    },
-    "suggest": {
-        "ext-tensor": "For faster training and inference"
+        "rubix/ml": "^0.3.0"
     },
     "scripts": {
         "explore": "@php explore.php",
