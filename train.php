@@ -36,6 +36,8 @@ $estimator->setLogger($logger);
 
 $estimator->train($training);
 
+$importances = $estimator->featureImportances();
+
 $losses = $estimator->steps();
 
 Unlabeled::build(array_transpose([$losses]))

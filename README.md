@@ -1,5 +1,5 @@
 # Rubix ML - Credit Card Default Predictor
-An example Rubix ML project that predicts the probability of a customer defaulting on their credit card bill next month using a [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset of credit card customers. We'll also describe the dataset using statistics and visualize it using a manifold learning technique called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html).
+An example Rubix ML project that predicts the probability of a customer defaulting on their credit card bill next month using a [Logistic Regression](https://docs.rubixml.com/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset of credit card customers. We'll also describe the dataset using statistics and visualize it using a manifold learning technique called [t-SNE](https://docs.rubixml.com/embedders/t-sne.html).
 
 - **Difficulty:** Medium
 - **Training time:** Minutes
@@ -20,12 +20,12 @@ $ composer create-project rubix/credit
 ## Tutorial
 
 ### Introduction
-The dataset provided to us contains 30,000 labeled samples from customers of a Taiwanese credit card issuer. Our objective is to train an estimator that predicts the probability of a customer defaulting on their credit card bill the next month. Since this is a *binary* classification problem (*will* default or *won't* default) we can use the binary classifier [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) which implements the Probabilistic interface to make our predictions. Logistic Regression is a supervised learner that trains a linear model using an algorithm called *Gradient Descent* under the hood.
+The dataset provided to us contains 30,000 labeled samples from customers of a Taiwanese credit card issuer. Our objective is to train an estimator that predicts the probability of a customer defaulting on their credit card bill the next month. Since this is a *binary* classification problem (*will* default or *won't* default) we can use the binary classifier [Logistic Regression](https://docs.rubixml.com/classifiers/logistic-regression.html) which implements the Probabilistic interface to make our predictions. Logistic Regression is a supervised learner that trains a linear model using an algorithm called *Gradient Descent* under the hood.
 
 > **Note:** The source code for this example can be found in the [train.php](https://github.com/RubixML/Credit/blob/master/train.php) file in project root.
 
 ### Extracting the Data
-In Rubix ML, data are passed in specialized containers called [Dataset objects](https://docs.rubixml.com/en/latest/datasets/api.html). We'll start by extracting the data provided in the `dataset.csv` file using the built-in [CSV](https://docs.rubixml.com/en/latest/extractors/csv.html) extractor and then instantiating a [Labeled](https://docs.rubixml.com/en/latest/datasets/labeled.html) dataset object from it using the `fromIterator()` factory method.
+In Rubix ML, data are passed in specialized containers called [Dataset objects](https://docs.rubixml.com/datasets/api.html). We'll start by extracting the data provided in the `dataset.csv` file using the built-in [CSV](https://docs.rubixml.com/extractors/csv.html) extractor and then instantiating a [Labeled](https://docs.rubixml.com/datasets/labeled.html) dataset object from it using the `fromIterator()` factory method.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
@@ -35,11 +35,11 @@ $dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
 ```
 
 ### Dataset Preparation
-Since data types cannot be inferred from the CSV format, the entire dataset will be loaded in as strings. We'll need to convert the numeric types to their integer and floating point number counterparts before proceeding. Lucky for us, the [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) accomplishes this task automatically.
+Since data types cannot be inferred from the CSV format, the entire dataset will be loaded in as strings. We'll need to convert the numeric types to their integer and floating point number counterparts before proceeding. Lucky for us, the [Numeric String Converter](https://docs.rubixml.com/transformers/numeric-string-converter.html) accomplishes this task automatically.
 
-The categorical features such as gender, education, and marital status - as well as the continuous features such as age and credit limit are now in the appropriate format. However, the Logistic Regression estimator is not compatible with categorical features directly so we'll need to [One Hot Encode](https://docs.rubixml.com/en/latest/transformers/one-hot-encoder.html) them to convert them into continuous ones. *One hot* encoding takes a categorical feature column and transforms the values into a vector of binary features where the feature that represents the active category is high (1) and all others are low (0).
+The categorical features such as gender, education, and marital status - as well as the continuous features such as age and credit limit are now in the appropriate format. However, the Logistic Regression estimator is not compatible with categorical features directly so we'll need to [One Hot Encode](https://docs.rubixml.com/transformers/one-hot-encoder.html) them to convert them into continuous ones. *One hot* encoding takes a categorical feature column and transforms the values into a vector of binary features where the feature that represents the active category is high (1) and all others are low (0).
 
-In addition, it is a good practice to center and scale the dataset as it helps speed up the convergence of the Gradient Descent learning algorithm. To do that, we'll chain another transformation to the dataset called [Z Scale Standardizer](https://docs.rubixml.com/en/latest/transformers/z-scale-standardizer.html) which standardizes the data by dividing each column over its Z score.
+In addition, it is a good practice to center and scale the dataset as it helps speed up the convergence of the Gradient Descent learning algorithm. To do that, we'll chain another transformation to the dataset called [Z Scale Standardizer](https://docs.rubixml.com/transformers/z-scale-standardizer.html) which standardizes the data by dividing each column over its Z score.
 
 ```php
 use Rubix\ML\Transformers\NumericStringConverter;
@@ -58,11 +58,11 @@ We'll need to set some of the data aside so that it can be used later for testin
 ```
 
 ### Instantiating the Learner
-You'll notice that [Logistic Regression](https://docs.rubixml.com/en/latest/classifiers/logistic-regression.html) has a few parameters to consider. These parameters are called *hyper-parameters* as they have a global effect on the behavior of the algorithm during training and inference. For this example, we'll specify the first three hyper-parameters, the *batch size* and the Gradient Descent *optimizer* with its *learning rate*.
+You'll notice that [Logistic Regression](https://docs.rubixml.com/classifiers/logistic-regression.html) has a few parameters to consider. These parameters are called *hyper-parameters* as they have a global effect on the behavior of the algorithm during training and inference. For this example, we'll specify the first three hyper-parameters, the *batch size* and the Gradient Descent *optimizer* with its *learning rate*.
 
 As previously mentioned, Logistic Regression trains using an algorithm called Gradient Descent. Specifically, it uses a form of GD called *Mini-batch* Gradient Descent that feeds small batches of the randomized dataset through the learner at a time. The size of the batch is determined by the *batch size* hyper-parameter. A small batch size typically trains faster but produces a rougher gradient for the learner to traverse. For our example, we'll pick 256 samples per batch but feel free to play with this setting on your own.
 
-The next hyper-parameter is the GD Optimizer which controls the update step of the algorithm. Most optimizers have a global learning rate setting that allows you to control the size of each Gradient Descent step. The [Step Decay](https://docs.rubixml.com/en/latest/neural-network/optimizers/step-decay.html) optimizer gradually decreases the learning rate by a given factor every *n* steps from its global setting. This allows training to be fast at first and then slow down as it get closer to reaching the minima of the gradient. We'll choose to decay the learning rate every 100 steps with a starting rate of 0.01. To instantiate the learner, pass the hyper-parameters to the Logistic Regression constructor.
+The next hyper-parameter is the GD Optimizer which controls the update step of the algorithm. Most optimizers have a global learning rate setting that allows you to control the size of each Gradient Descent step. The [Step Decay](https://docs.rubixml.com/neural-network/optimizers/step-decay.html) optimizer gradually decreases the learning rate by a given factor every *n* steps from its global setting. This allows training to be fast at first and then slow down as it get closer to reaching the minima of the gradient. We'll choose to decay the learning rate every 100 steps with a starting rate of 0.01. To instantiate the learner, pass the hyper-parameters to the Logistic Regression constructor.
 
 ```php
 use Rubix\ML\Classifiers\LogisticRegression;
@@ -72,7 +72,7 @@ $estimator = new LogisticRegression(256, new StepDecay(0.01, 100));
 ```
 
 ### Setting a Logger
-Since Logistic Regression implements the [Verbose](https://docs.rubixml.com/en/latest/verbose.html) interface, we can hand it a [PSR-3](https://www.php-fig.org/psr/psr-3/) compatible logger instance and it will log helpful information to the console during training. We'll use the [Screen](https://docs.rubixml.com/en/latest/other/loggers/screen.html) logger that comes built-in with Rubix ML, but feel free to choose any great PHP logger such as [Monolog](https://github.com/Seldaek/monolog) or [Analog](https://github.com/jbroadway/analog) to do the job as well.
+Since Logistic Regression implements the [Verbose](https://docs.rubixml.com/verbose.html) interface, we can hand it a [PSR-3](https://www.php-fig.org/psr/psr-3/) compatible logger instance and it will log helpful information to the console during training. We'll use the [Screen](https://docs.rubixml.com/other/loggers/screen.html) logger that comes built-in with Rubix ML, but feel free to choose any great PHP logger such as [Monolog](https://github.com/Seldaek/monolog) or [Analog](https://github.com/jbroadway/analog) to do the job as well.
 
 ```php
 use Rubix\ML\Other\Loggers\Screen;
@@ -88,7 +88,7 @@ $estimator->train($dataset);
 ```
 
 ### Training Loss
-The `steps()` method on Logistic Regression outputs the value of the [Cross Entropy](https://docs.rubixml.com/en/latest/neural-network/cost-functions/cross-entropy.html) cost function at each epoch from the last training session. You can plot those values by dumping them to a CSV file and then importing them into your favorite plotting software such as [Plotly](https://plot.ly/) or [Tableu](https://public.tableau.com/en-us/s/).
+The `steps()` method on Logistic Regression outputs the value of the [Cross Entropy](https://docs.rubixml.com/neural-network/cost-functions/cross-entropy.html) cost function at each epoch from the last training session. You can plot those values by dumping them to a CSV file and then importing them into your favorite plotting software such as [Plotly](https://plot.ly/) or [Tableu](https://public.tableau.com/en-us/s/).
 
 ```php
 $losses = $estimator->steps();
@@ -101,7 +101,7 @@ You'll notice that the loss should be decreasing at each epoch and changes in th
 ### Cross Validation
 Once the learner has been trained, the next step is to determine if the final model can generalize well to the real world. For this process, we'll need the testing data that we set aside earlier. We'll go ahead and generate two reports that compare the predictions outputted by the estimator with the ground truth labels from the testing set.
 
-The [Multiclass Breakdown](https://docs.rubixml.com/en/latest/cross-validation/reports/multiclass-breakdown.html) report gives us detailed metrics (Accuracy, F1 Score, MCC) about the model's performance at the class level. In addition, [Confusion Matrix](https://docs.rubixml.com/en/latest/cross-validation/reports/confusion-matrix.html) is a table that compares the number of predictions for a particular class with the actual ground truth. We can wrap both of these reports in an [Aggregate Report](https://docs.rubixml.com/en/latest/cross-validation/reports/aggregate-report.html) to generate them both at the same time.
+The [Multiclass Breakdown](https://docs.rubixml.com/cross-validation/reports/multiclass-breakdown.html) report gives us detailed metrics (Accuracy, F1 Score, MCC) about the model's performance at the class level. In addition, [Confusion Matrix](https://docs.rubixml.com/cross-validation/reports/confusion-matrix.html) is a table that compares the number of predictions for a particular class with the actual ground truth. We can wrap both of these reports in an [Aggregate Report](https://docs.rubixml.com/cross-validation/reports/aggregate-report.html) to generate them both at the same time.
 
 ```php
 use Rubix\ML\CrossValidation\Reports\AggregateReport;
@@ -274,7 +274,7 @@ $stats->toJSON()->write('stats.json');
 ```
 
 ### Visualizing the Dataset
-The credit card dataset has 25 features and after one hot encoding it becomes 93. Thus, the vector space for this dataset is *93-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) to help us visualize the data by embedding it into only two dimensions.
+The credit card dataset has 25 features and after one hot encoding it becomes 93. Thus, the vector space for this dataset is *93-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://docs.rubixml.com/embedders/t-sne.html) to help us visualize the data by embedding it into only two dimensions.
 
 We don't need the entire dataset to generate a decent embedding so we'll take 2,500 random samples from the dataset and only embed those. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
 
@@ -285,7 +285,7 @@ $dataset = $dataset->randomize()->head(2500);
 ```
 
 ### Instantiating the Embedder
-[T-SNE](https://docs.rubixml.com/en/latest/embedders/t-sne.html) stands for t-Distributed Stochastic Neighbor Embedding and is a powerful non-linear dimensionality reduction algorithm suited for visualizing high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to the integer `2`. The next hyper-parameter is the learning rate which controls the rate at which the embedder updates the target embedding. The last hyper-parameter we'll set is called the *perplexity* and can the thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. Refer to the documentation for a full description of the hyper-parameters.
+[T-SNE](https://docs.rubixml.com/embedders/t-sne.html) stands for t-Distributed Stochastic Neighbor Embedding and is a powerful non-linear dimensionality reduction algorithm suited for visualizing high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to the integer `2`. The next hyper-parameter is the learning rate which controls the rate at which the embedder updates the target embedding. The last hyper-parameter we'll set is called the *perplexity* and can the thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. Refer to the documentation for a full description of the hyper-parameters.
 
 ```php
 use Rubix\ML\Embedders\TSNE;
@@ -304,9 +304,9 @@ $dataset->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer());
 ```
 
-> **Note:** Centering and standardizing the data with [Z Scale Standardizer](https://docs.rubixml.com/en/latest/transformers/z-scale-standardizer.html) or another standardizer is not always necessary, however, it just so happens that both Logistic Regression and t-SNE benefit when the data are centered and standardized.
+> **Note:** Centering and standardizing the data with [Z Scale Standardizer](https://docs.rubixml.com/transformers/z-scale-standardizer.html) or another standardizer is not always necessary, however, it just so happens that both Logistic Regression and t-SNE benefit when the data are centered and standardized.
 
-Since an Embedder is a [Transformer](https://docs.rubixml.com/en/latest/transformers/api.md) at heart, you can use the newly instantiated t-SNE embedder to embed the samples in a dataset using the `apply()` method.
+Since an Embedder is a [Transformer](https://docs.rubixml.com/transformers/api.md) at heart, you can use the newly instantiated t-SNE embedder to embed the samples in a dataset using the `apply()` method.
 
 ```php
 $dataset->apply($embedder);
@@ -330,7 +330,7 @@ Here is an example of what a typical 2-dimensional embedding looks like when plo
 > **Note**: Due to the stochastic nature of the t-SNE algorithm, every embedding will look a little different from the last. The important information is contained in the overall *structure* of the data.
 
 ### Next Steps
-Congratulations on completing the tutorial! The Logistic Regression estimator we just trained is able to achieve the same results as in the original paper, however, there are other estimators in Rubix ML to choose from that may perform better. Consider the same problem using an ensemble method such as [AdaBoost](https://docs.rubixml.com/en/latest/classifiers/adaboost.html) or [Random Forest](https://docs.rubixml.com/en/latest/classifiers/random-forest.html) as a next step.
+Congratulations on completing the tutorial! The Logistic Regression estimator we just trained is able to achieve the same results as in the original paper, however, there are other estimators in Rubix ML to choose from that may perform better. Consider the same problem using an ensemble method such as [AdaBoost](https://docs.rubixml.com/classifiers/adaboost.html) or [Random Forest](https://docs.rubixml.com/classifiers/random-forest.html) as a next step.
 
 ## Slide Deck
 You can refer to the [slide deck](https://docs.google.com/presentation/d/1ZteG0Rf3siS_o-8x2r2AWw95ntcCggmmEHUfwQiuCnk/edit?usp=sharing) that accompanies this example project if you need extra help or a more in depth look at the math behind Logistic Regression, Gradient Descent, and the Cross Entropy cost function.
