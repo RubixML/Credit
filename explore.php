@@ -2,13 +2,14 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
-use Rubix\ML\Extractors\CSV;
+use Rubix\ML\Loggers\Screen;
 use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\NumericStringConverter;
+use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
-use Rubix\ML\Embedders\TSNE;
-use Rubix\ML\Other\Loggers\Screen;
+use Rubix\ML\Transformers\TSNE;
 
 ini_set('memory_limit', '-1');
 
@@ -23,11 +24,11 @@ $stats = $dataset->describe();
 
 echo $stats;
 
-$stats->toJSON()->write('stats.json');
+$stats->toJSON()->saveTo(new Filesystem('stats.json'));
 
 $logger->info('Stats saved to stats.json');
 
-$dataset = $dataset->randomize()->head(2500);
+$dataset = $dataset->randomize()->head(1000);
 
 $embedder = new TSNE(2, 20.0, 20);
 
@@ -36,7 +37,6 @@ $embedder->setLogger($logger);
 $dataset->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer())
     ->apply($embedder)
-    ->toCSV(['x', 'y', 'label'])
-    ->write('embedding.csv');
+    ->exportTo(new CSV('embedding.csv'));
 
 $logger->info('Embedding saved to embedding.csv');

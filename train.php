@@ -2,6 +2,7 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
+use Rubix\ML\Loggers\Screen;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\NumericStringConverter;
@@ -9,11 +10,10 @@ use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Classifiers\LogisticRegression;
 use Rubix\ML\NeuralNet\Optimizers\StepDecay;
-use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\CrossValidation\Reports\AggregateReport;
 use Rubix\ML\CrossValidation\Reports\ConfusionMatrix;
 use Rubix\ML\CrossValidation\Reports\MulticlassBreakdown;
-use Rubix\ML\Datasets\Unlabeled;
+use Rubix\ML\Persisters\Filesystem;
 
 use function Rubix\ML\array_transpose;
 
@@ -36,13 +36,9 @@ $estimator->setLogger($logger);
 
 $estimator->train($training);
 
-$importances = $estimator->featureImportances();
+$extractor = new CSV('progress.csv', true);
 
-$losses = $estimator->steps();
-
-Unlabeled::build(array_transpose([$losses]))
-    ->toCSV(['losses'])
-    ->write('progress.csv');
+$extractor->export($estimator->steps());
 
 $logger->info('Progress saved to progress.csv');
 
@@ -59,6 +55,6 @@ $results = $report->generate($predictions, $testing->labels());
 
 echo $results;
 
-$results->toJSON()->write('report.json');
+$results->toJSON()->saveTo(new Filesystem('report.json'));
 
 $logger->info('Report saved to report.json');

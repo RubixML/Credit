@@ -11,7 +11,7 @@ $ composer create-project rubix/credit
 ```
 
 ## Requirements
-- [PHP](https://php.net) 7.2 or above
+- [PHP](https://php.net) 7.4 or above
 
 #### Recommended
 - [Tensor extension](https://github.com/RubixML/Tensor) for faster training and inference
@@ -91,7 +91,11 @@ $estimator->train($dataset);
 The `steps()` method on Logistic Regression outputs the value of the [Cross Entropy](https://docs.rubixml.com/latest/neural-network/cost-functions/cross-entropy.html) cost function at each epoch from the last training session. You can plot those values by dumping them to a CSV file and then importing them into your favorite plotting software such as [Plotly](https://plot.ly/) or [Tableu](https://public.tableau.com/en-us/s/).
 
 ```php
-$losses = $estimator->steps();
+use Rubix\ML\Extractors\CSV;
+
+$extractor = new CSV('progress.csv', true);
+
+$extractor->export($estimator->steps());
 ```
 
 You'll notice that the loss should be decreasing at each epoch and changes in the loss value should get smaller the closer the learner is to converging on the minimum of the cost function.
@@ -270,7 +274,9 @@ Here is the output of the first two columns in the credit card dataset. We can s
 In addition, we'll save the stats to a JSON file so we can reference it later.
 
 ```php
-$stats->toJSON()->write('stats.json');
+use Rubix\ML\Persisters\Filesystem;
+
+$stats->toJSON()->saveTo(new Filesystem('stats.json'));
 ```
 
 ### Visualizing the Dataset
@@ -315,7 +321,9 @@ $dataset->apply($embedder);
 When the embedding is complete, we can save the dataset to a file so we can open it later in our favorite plotting software.
 
 ```php
-$dataset->toCSV()->write('embedding.csv');
+use Rubix\ML\Extractors\CSV;
+
+$dataset->exportTo(new CSV('embedding.csv'));
 ```
 
 Now we're ready to execute the explore script and plot the embedding using our favorite plotting software.
