@@ -88,7 +88,7 @@ $estimator->train($dataset);
 ```
 
 ### Training Loss
-The `steps()` method on Logistic Regression outputs the value of the [Cross Entropy](https://docs.rubixml.com/latest/neural-network/cost-functions/cross-entropy.html) cost function at each epoch from the last training session. You can plot those values by dumping them to a CSV file and then importing them into your favorite plotting software such as [Plotly](https://plot.ly/) or [Tableu](https://public.tableau.com/en-us/s/).
+The `steps()` method on Logistic Regression outputs the value of the [Cross Entropy](https://docs.rubixml.com/latest/neural-network/cost-functions/cross-entropy.html) cost function at each epoch from the last training session. You can plot those values by dumping them to a CSV file and then importing them into your favorite plotting software such as [Plotly](https://plot.ly/) or [Tableau](https://public.tableau.com/en-us/s/).
 
 ```php
 use Rubix\ML\Extractors\CSV;
