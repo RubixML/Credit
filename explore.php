@@ -28,7 +28,7 @@ $stats->toJSON()->saveTo(new Filesystem('stats.json'));
 
 $logger->info('Stats saved to stats.json');
 
-$dataset = $dataset->randomize()->head(1000);
+$dataset = $dataset->randomize()->head(2000);
 
 $embedder = new TSNE(2, 20.0, 20);
 
