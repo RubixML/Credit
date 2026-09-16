@@ -247,14 +247,24 @@ Exploratory data analysis is the process of using analytical techniques such as 
 
 > **Note:** The source code for this example can be found in the [explore.php](https://github.com/RubixML/Credit/blob/master/explore.php) file in project root.
 
-Begin by importing the credit card dataset and converting the numeric strings to floats like we did in a previous step.
+Begin by importing the credit card dataset and handling missing values and converting the numeric strings to floats like we did in a previous step.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Extractors\CSV;
+use Rubix\ML\Transformers\LambdaFunction;
+use Rubix\ML\Transformers\MissingDataImputer;
+use Rubix\ML\Strategies\Prior;
 use Rubix\ML\Transformers\FloatTypeConverter;
 
-$dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
+$dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
+
+$dataset = $dataset->apply(new LambdaFunction(function (array &$sample) {
+        if ($sample[2] === '0') {
+            $sample[2] = '?';
+        }
+    }))
+    ->apply(new MissingDataImputer(categorical: new Prior()))
     ->apply(new FloatTypeConverter());
 ```
 
@@ -306,24 +316,31 @@ $stats->toJSON()->saveTo(new Filesystem('stats.json'));
 
 ### Visualizing the Dataset
 
-The credit card dataset has 25 features and after one hot encoding it becomes 93. Thus, the vector space for this dataset is *93-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://rubixml.github.io/ML/latest/transformers/t-sne.html) to help us visualize the data by embedding it into only two dimensions.
+The credit card dataset has 25 features and after one hot encoding it becomes 92. Thus, the vector space for this dataset is *92-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://rubixml.github.io/ML/latest/transformers/t-sne.html) to help us visualize the data by embedding it into only two dimensions.
 
-We don't need the entire dataset to generate a decent embedding so we'll take 2,000 random samples from the dataset and only embed those. The `head()` method on the dataset object will return the first *n* samples and labels from the dataset in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
+We don't need the entire dataset to generate a decent embedding so we'll take 2,000 random samples from the dataset and only embed those. The `take()` method on the dataset object will remove the first *n* samples and labels from the dataset and return them in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
 
-$dataset = $dataset->randomize()->head(2000);
+$dataset = $dataset->randomize()->take(2000);
 ```
 
 ### Instantiating the Embedder
 
-[T-SNE](https://rubixml.github.io/ML/latest/transformers/t-sne.html) stands for t-Distributed Stochastic Neighbor Embedding and is a powerful non-linear dimensionality reduction algorithm suited for visualizing high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to the integer `2`. The next hyper-parameter is the learning rate which controls the rate at which the embedder updates the target embedding. The third hyper-parameter we'll set is called the *perplexity* and can be thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. The fourth hyper-parameter is the *exaggeration* which is the factor to exaggerate the distances between samples during the early stage of the embedding to encourage more pronounced clusters. The final hyper-parameter is the maximum number of *epochs*, i.e. the number of times to iterate over the embedding. Refer to the documentation for a full description of the hyper-parameters.
+[T-SNE](https://rubixml.github.io/ML/latest/transformers/t-sne.html) stands for t-Distributed Stochastic Neighbor Embedding and is a powerful non-linear dimensionality reduction algorithm suited for visualizing high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to the integer `2`. The next hyper-parameter is the learning rate which controls the rate at which the embedder updates the target embedding. The third hyper-parameter we'll set is called the *perplexity* and can be thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. The fourth hyper-parameter is the *exaggeration* which is the factor to exaggerate the distances between samples during the early stage of the embedding to encourage more pronounced clusters. The next hyper-parameter is the maximum number of *epochs*, i.e. the number of times to iterate over the embedding. The final hyper-parameter is the *minimum gradient*, the minimum norm of the gradient necessary to continue embedding. Refer to the documentation for a full description of the hyper-parameters.
 
 ```php
 use Rubix\ML\Transformers\TSNE;
 
-$embedder = new TSNE(2, 20.0, 20, 12.0, 1000);
+$embedder = new TSNE(
+    dimensions: 2,
+    rate: 20.0,
+    perplexity: 20,
+    exaggeration: 12.0,
+    epochs: 1000,
+    minGradient: 1e-7
+);
 ```
 
 ### Embedding the Dataset
@@ -331,10 +348,12 @@ $embedder = new TSNE(2, 20.0, 20, 12.0, 1000);
 Before we continue, we'll need to prepare the dataset for embedding since, like Logistic Regression, T-SNE is only compatible with continuous features. We can perform the necessary transformations on the dataset by passing the transformers to the `apply()` method on the dataset object like we did earlier in the tutorial.
 
 ```php
+use Rubix\ML\Transformers\FloatTypeConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 
 $dataset->apply(new OneHotEncoder())
+    ->apply(new FloatTypeConverter())
     ->apply(new ZScaleStandardizer());
 ```
 
