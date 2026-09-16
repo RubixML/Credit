@@ -8,6 +8,9 @@ use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\FloatTypeConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
+use Rubix\ML\Transformers\LambdaFunction;
+use Rubix\ML\Transformers\MissingDataImputer;
+use Rubix\ML\Strategies\Prior;
 use Rubix\ML\Classifiers\LogisticRegression;
 use Rubix\ML\NeuralNet\Optimizers\Stochastic;
 use Rubix\ML\NeuralNet\Optimizers\Schedulers\StepDecay;
@@ -23,6 +26,12 @@ $logger = new Screen();
 $logger->info('Loading data into memory');
 
 $dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
+    ->apply(new LambdaFunction(function (array &$sample) {
+        if ($sample[2] === '0') {
+            $sample[2] = '?';
+        }
+    }))
+    ->apply(new MissingDataImputer(categorical: new Prior()))
     ->apply(new FloatTypeConverter())
     ->apply(new OneHotEncoder())
     ->apply(new FloatTypeConverter())

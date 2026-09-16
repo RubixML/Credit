@@ -17,7 +17,6 @@ $ composer create-project rubix/credit
 ### Recommended
 
 - [Tensor extension](https://github.com/RubixML/Tensor) for faster training and inference
-- 1G of system memory or more
 
 ## Tutorial
 
@@ -40,6 +39,8 @@ $dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
 
 ### Dataset Preparation
 
+The raw dataset contains a handful of missing values. In particular, the `education` column encodes an unknown level of education as `0`. The [Missing Data Imputer](https://rubixml.github.io/ML/latest/transformers/missing-data-imputer.html) is able to fill in missing categorical values, however, it recognizes them by a special placeholder category (the default being `?`). Since the missing values are encoded as `0`, we'll first use a [Lambda Function](https://rubixml.github.io/ML/latest/transformers/lambda-function.html) transformer to swap them for the `?` placeholder. The imputer will then fill each missing category by drawing a guess from the [Prior](https://rubixml.github.io/ML/latest/strategies/prior.html) probability of each category.
+
 Since data types cannot be inferred from the CSV format, the entire dataset will be loaded in as strings. We'll need to convert those numeric strings to their floating point number counterparts before proceeding. Lucky for us, the [Float Type Converter](https://rubixml.github.io/ML/latest/transformers/float-type-converter.html) accomplishes this task automatically. It also converts any integers to floats since, starting with version 3, integers are treated as a categorical data type.
 
 The categorical features such as gender, education, and marital status - as well as the continuous features such as age and credit limit are now in the appropriate format. However, the Logistic Regression estimator is not compatible with categorical features directly so we'll need to [One Hot Encode](https://rubixml.github.io/ML/latest/transformers/one-hot-encoder.html) them to convert them into continuous ones. *One hot* encoding takes a categorical feature column and transforms the values into a vector of binary features where the feature that represents the active category is high (1) and all others are low (0). Since the encoder produces its flags as integers (which version 3 considers categorical), we'll run the collected continuous columns through the [Float Type Converter](https://rubixml.github.io/ML/latest/transformers/float-type-converter.html) once more to keep them continuous.
@@ -47,11 +48,20 @@ The categorical features such as gender, education, and marital status - as well
 In addition, it is a good practice to center and scale the dataset as it helps speed up the convergence of the Gradient Descent learning algorithm. To do that, we'll chain another transformation to the dataset called [Z Scale Standardizer](https://rubixml.github.io/ML/latest/transformers/z-scale-standardizer.html) which standardizes the data by dividing each column over its Z score.
 
 ```php
+use Rubix\ML\Transformers\LambdaFunction;
+use Rubix\ML\Transformers\MissingDataImputer;
+use Rubix\ML\Strategies\Prior;
 use Rubix\ML\Transformers\FloatTypeConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 
-$dataset->apply(new FloatTypeConverter())
+$dataset->apply(new LambdaFunction(function (array &$sample) {
+        if ($sample[2] === '0') {
+            $sample[2] = '?';
+        }
+    }))
+    ->apply(new MissingDataImputer(categorical: new Prior()))
+    ->apply(new FloatTypeConverter())
     ->apply(new OneHotEncoder())
     ->apply(new FloatTypeConverter())
     ->apply(new ZScaleStandardizer());
