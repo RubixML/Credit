@@ -30,7 +30,7 @@ $logger->info('Stats saved to stats.json');
 
 $dataset = $dataset->randomize()->head(2000);
 
-$embedder = new TSNE(2, 20.0, 20);
+$embedder = new TSNE(2, 20.0, 20, 12.0, 1000);
 
 $embedder->setLogger($logger);
 
