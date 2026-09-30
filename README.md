@@ -43,7 +43,7 @@ The raw dataset contains a handful of missing values. In particular, the `educat
 
 Since data types cannot be inferred from the CSV format, the entire dataset will be loaded in as strings. We'll need to convert those numeric strings to their floating point number counterparts before proceeding. Lucky for us, the [Float Type Converter](https://rubixml.github.io/ML/latest/transformers/float-type-converter.html) accomplishes this task automatically. It also converts any integers to floats since, starting with version 3, integers are treated as a categorical data type.
 
-The categorical features such as gender, education, and marital status - as well as the continuous features such as age and credit limit are now in the appropriate format. However, the Logistic Regression estimator is not compatible with categorical features directly so we'll need to [One Hot Encode](https://rubixml.github.io/ML/latest/transformers/one-hot-encoder.html) them to convert them into continuous ones. *One hot* encoding takes a categorical feature column and transforms the values into a vector of binary features where the feature that represents the active category is high (1) and all others are low (0). Since the encoder produces its flags as integers (which version 3 considers categorical), we'll run the collected continuous columns through the [Float Type Converter](https://rubixml.github.io/ML/latest/transformers/float-type-converter.html) once more to keep them continuous.
+The categorical features such as gender, education, and marital status - as well as the continuous features such as age and credit limit are now in the appropriate format. However, the Logistic Regression estimator is not compatible with categorical features directly so we'll need to [One Hot Encode](https://rubixml.github.io/ML/latest/transformers/one-hot-encoder.html) them to convert them into continuous ones. *One hot* encoding takes a categorical feature column and transforms the values into a vector of binary features where the feature that represents the active category is high (1) and all others are low (0).
 
 In addition, it is a good practice to center and scale the dataset as it helps speed up the convergence of the Gradient Descent learning algorithm. To do that, we'll chain another transformation to the dataset called [Z Scale Standardizer](https://rubixml.github.io/ML/latest/transformers/z-scale-standardizer.html) which standardizes the data by dividing each column over its Z score.
 
@@ -63,7 +63,6 @@ $dataset->apply(new LambdaFunction(function (array &$sample) {
     ->apply(new MissingDataImputer(categorical: new Prior()))
     ->apply(new FloatTypeConverter())
     ->apply(new OneHotEncoder())
-    ->apply(new FloatTypeConverter())
     ->apply(new ZScaleStandardizer());
 ```
 
@@ -104,7 +103,7 @@ $estimator->setLogger(new Screen());
 Now, you are ready to train the learner by passing the training set that we created earlier to the `train()` method on the learner instance.
 
 ```php
-$estimator->train($dataset);
+$estimator->train($training);
 ```
 
 ### Training Loss
@@ -116,7 +115,7 @@ use Rubix\ML\Extractors\CSV;
 
 $extractor = new CSV('progress.csv', true);
 
-$extractor->export($estimator->progress());
+$extractor->export($estimator->progress(), overwrite: true);
 ```
 
 You'll notice that the loss should be decreasing at each epoch and changes in the loss value should get smaller the closer the learner is to converging on the minimum of the cost function.
@@ -254,7 +253,6 @@ use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\LambdaFunction;
 use Rubix\ML\Transformers\MissingDataImputer;
-use Rubix\ML\Strategies\Prior;
 use Rubix\ML\Transformers\FloatTypeConverter;
 
 $dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
@@ -264,18 +262,16 @@ $dataset = $dataset->apply(new LambdaFunction(function (array &$sample) {
             $sample[2] = '?';
         }
     }))
-    ->apply(new MissingDataImputer(categorical: new Prior()))
+    ->apply(new MissingDataImputer())
     ->apply(new FloatTypeConverter());
 ```
 
 ### Describing the Dataset
 
-The dataset object we instantiated has a `describe()` method that generates statistics for each feature column in the dataset. Category densities will be calculated for each categorical feature value and statistics such as mean, median, and standard deviation will be output for the continuous feature columns. The return value is a report object that can be echoed out to the terminal.
+The dataset object we instantiated has a `describeByClassLabels()` method that generates statistics for each feature column in the dataset by class label. Category densities will be calculated for each categorical feature value and statistics such as mean, median, and standard deviation will be output for the continuous feature columns. The return value is a report object that can be echoed out to the terminal.
 
 ```php
-$stats = $dataset->describe();
-
-echo $stats;
+$stats = $dataset->describeByClassLabels();
 ```
 
 Here is the output of the first two columns in the credit card dataset. We can see that the first column `credit_limit` has a mean of 167,484 and the distribution of values is skewed to the left. We also know that column two `gender` contains two categories and that there are more females than males (60 / 40) represented in this dataset. Generate and examine the dataset stats for yourself and see if you can identify any other interesting characteristics of the dataset.
@@ -318,17 +314,17 @@ $stats->toJSON()->saveTo(new Filesystem('stats.json'));
 
 The credit card dataset has 25 features and after one hot encoding it becomes 92. Thus, the vector space for this dataset is *92-dimensional*. Visualizing this type of high-dimensional data with the human eye is only possible by reducing the number of dimensions to something that makes sense to plot on a chart (1 - 3 dimensions). Such dimensionality reduction is called *Manifold Learning* because it seeks to find a lower-dimensional manifold of the data. Here we will use a popular manifold learning algorithm called [t-SNE](https://rubixml.github.io/ML/latest/transformers/t-sne.html) to help us visualize the data by embedding it into only two dimensions.
 
-We don't need the entire dataset to generate a decent embedding so we'll take 2,000 random samples from the dataset and only embed those. The `take()` method on the dataset object will remove the first *n* samples and labels from the dataset and return them in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
+We don't need the entire dataset to generate a decent embedding so we'll take 2,048 random samples from the dataset and only embed those. The `take()` method on the dataset object will remove the first *n* samples and labels from the dataset and return them in a new dataset object. Randomizing the dataset beforehand will remove the bias as to the sequence that the data was collected and inserted.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
 
-$dataset = $dataset->randomize()->take(2000);
+$dataset = $dataset->randomize()->take(2048);
 ```
 
 ### Instantiating the Embedder
 
-[T-SNE](https://rubixml.github.io/ML/latest/transformers/t-sne.html) stands for t-Distributed Stochastic Neighbor Embedding and is a powerful non-linear dimensionality reduction algorithm suited for visualizing high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to the integer `2`. The next hyper-parameter is the learning rate which controls the rate at which the embedder updates the target embedding. The third hyper-parameter we'll set is called the *perplexity* and can be thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. The fourth hyper-parameter is the *exaggeration* which is the factor to exaggerate the distances between samples during the early stage of the embedding to encourage more pronounced clusters. The next hyper-parameter is the maximum number of *epochs*, i.e. the number of times to iterate over the embedding. The final hyper-parameter is the *minimum gradient*, the minimum norm of the gradient necessary to continue embedding. Refer to the documentation for a full description of the hyper-parameters.
+[T-SNE](https://rubixml.github.io/ML/latest/transformers/t-sne.html) stands for t-Distributed Stochastic Neighbor Embedding and is a powerful non-linear dimensionality reduction algorithm suited for visualizing high-dimensional datasets. The first hyper-parameter is the number of dimensions of the target embedding. Since we want to be able to plot the embedding as a 2-d scatterplot we'll set this parameter to the integer `2`. The next hyper-parameter is the learning rate which controls the rate at which the embedder updates the target embedding. The third hyper-parameter we'll set is called the *perplexity* and can be thought of as the number of nearest neighbors to consider when computing the variance of the distribution of a sample. The fourth hyper-parameter is the *exaggeration* which is the factor to exaggerate the distances between samples during the early stage of the embedding to encourage more pronounced clusters. The next hyper-parameter is the maximum number of *epochs*, i.e. the number of times to iterate over the embedding. Then there is the *minimum gradient*, the minimum norm of the gradient necessary to continue embedding, which acts as a convergence threshold. Finally, the *evaluation interval* is the number of epochs between gradient evaluations used to check that criterion, and the *window* of the moving average that smooths the gradient signal before it is compared against the minimum. Refer to the documentation for a full description of the hyper-parameters.
 
 ```php
 use Rubix\ML\Transformers\TSNE;
@@ -338,8 +334,10 @@ $embedder = new TSNE(
     rate: 20.0,
     perplexity: 20,
     exaggeration: 12.0,
-    epochs: 1000,
-    minGradient: 1e-7
+    epochs: 2000,
+    minGradient: 1e-7,
+    evalInterval: 10,
+    window: 5
 );
 ```
 
@@ -348,12 +346,10 @@ $embedder = new TSNE(
 Before we continue, we'll need to prepare the dataset for embedding since, like Logistic Regression, T-SNE is only compatible with continuous features. We can perform the necessary transformations on the dataset by passing the transformers to the `apply()` method on the dataset object like we did earlier in the tutorial.
 
 ```php
-use Rubix\ML\Transformers\FloatTypeConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 
 $dataset->apply(new OneHotEncoder())
-    ->apply(new FloatTypeConverter())
     ->apply(new ZScaleStandardizer());
 ```
 
@@ -370,13 +366,21 @@ When the embedding is complete, we can save the dataset to a file so we can open
 ```php
 use Rubix\ML\Extractors\CSV;
 
-$dataset->exportTo(new CSV('embedding.csv'));
+$dataset->exportTo(new CSV('embedding.csv'), overwrite: true);
 ```
 
-Now we're ready to execute the explore script and plot the embedding using our favorite plotting software.
+Now we're ready to execute the explore script to generate the embedding.
 
 ```sh
 $ php explore.php
+```
+
+### Plotting the Embedding
+
+[plot.php](https://github.com/RubixML/Credit/blob/master/plot.php) reads the `embedding.csv` produced by the explore script and renders it as an interactive 2-d scatterplot colored by the sample label — one point cloud for samples that defaulted (`yes`) and one for those that did not (`no`). The result is written to a single self-contained `embedding.html` file that only requires [Plotly.js](https://plot.ly/javascript/), loaded from a CDN at runtime, to display in a browser.
+
+```sh
+$ php plot.php
 ```
 
 Here is an example of what a typical 2-dimensional embedding looks like when plotted.

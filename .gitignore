@@ -2,6 +2,7 @@
 composer.lock
 progress.csv
 embedding.csv
+embedding.html
 report.json
 predictions.json
 probabilities.json

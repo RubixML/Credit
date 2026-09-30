@@ -34,7 +34,6 @@ $dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
     ->apply(new MissingDataImputer(categorical: new Prior()))
     ->apply(new FloatTypeConverter())
     ->apply(new OneHotEncoder())
-    ->apply(new FloatTypeConverter())
     ->apply(new ZScaleStandardizer());
 
 [$training, $testing] = $dataset->stratifiedSplit(0.8);
@@ -47,7 +46,7 @@ $estimator->train($training);
 
 $extractor = new CSV('progress.csv', true);
 
-$extractor->export($estimator->progress());
+$extractor->export($estimator->progress(), overwrite: true);
 
 $logger->info('Progress saved to progress.csv');
 

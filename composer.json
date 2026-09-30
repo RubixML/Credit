@@ -23,7 +23,8 @@
     },
     "scripts": {
         "explore": "@php explore.php",
-        "train": "@php train.php"
+        "train": "@php train.php",
+        "plot": "@php plot.php"
     },
     "config": {
         "preferred-install": "dist",
