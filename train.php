@@ -10,7 +10,6 @@ use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Transformers\LambdaFunction;
 use Rubix\ML\Transformers\MissingDataImputer;
-use Rubix\ML\Strategies\Prior;
 use Rubix\ML\Classifiers\LogisticRegression;
 use Rubix\ML\NeuralNet\Optimizers\Stochastic;
 use Rubix\ML\NeuralNet\Optimizers\Schedulers\StepDecay;
@@ -31,16 +30,18 @@ $dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
             $sample[2] = '?';
         }
     }))
-    ->apply(new MissingDataImputer(categorical: new Prior()))
+    ->apply(new MissingDataImputer())
     ->apply(new FloatTypeConverter())
     ->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer());
 
-[$training, $testing] = $dataset->stratifiedSplit(0.8);
+[$training, $testing] = $dataset->randomize()->stratifiedSplit(0.8);
 
-$estimator = new LogisticRegression(128, new Stochastic(new StepDecay(0.01, 100)));
+$estimator = new LogisticRegression(128, new Stochastic(new StepDecay(0.001, 100)));
 
 $estimator->setLogger($logger);
+
+$estimator->setValidationDataset($testing);
 
 $estimator->train($training);
 

@@ -39,7 +39,7 @@ $dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
 
 ### Dataset Preparation
 
-The raw dataset contains a handful of missing values. In particular, the `education` column encodes an unknown level of education as `0`. The [Missing Data Imputer](https://rubixml.github.io/ML/latest/transformers/missing-data-imputer.html) is able to fill in missing categorical values, however, it recognizes them by a special placeholder category (the default being `?`). Since the missing values are encoded as `0`, we'll first use a [Lambda Function](https://rubixml.github.io/ML/latest/transformers/lambda-function.html) transformer to swap them for the `?` placeholder. The imputer will then fill each missing category by drawing a guess from the [Prior](https://rubixml.github.io/ML/latest/strategies/prior.html) probability of each category.
+The raw dataset contains a handful of missing values. In particular, the `education` column encodes an unknown level of education as `0`. The [Missing Data Imputer](https://rubixml.github.io/ML/latest/transformers/missing-data-imputer.html) is able to fill in missing categorical values, however, it recognizes them by a special placeholder category (the default being `?`). Since the missing values are encoded as `0`, we'll first use a [Lambda Function](https://rubixml.github.io/ML/latest/transformers/lambda-function.html) transformer to swap them for the `?` placeholder. The imputer will then fill each missing category by drawing a guess from the [Prior](https://rubixml.github.io/ML/latest/strategies/prior.html) probability of each category, which is the imputer's default strategy so no configuration is required.
 
 Since data types cannot be inferred from the CSV format, the entire dataset will be loaded in as strings. We'll need to convert those numeric strings to their floating point number counterparts before proceeding. Lucky for us, the [Float Type Converter](https://rubixml.github.io/ML/latest/transformers/float-type-converter.html) accomplishes this task automatically. It also converts any integers to floats since, starting with version 3, integers are treated as a categorical data type.
 
@@ -50,7 +50,6 @@ In addition, it is a good practice to center and scale the dataset as it helps s
 ```php
 use Rubix\ML\Transformers\LambdaFunction;
 use Rubix\ML\Transformers\MissingDataImputer;
-use Rubix\ML\Strategies\Prior;
 use Rubix\ML\Transformers\FloatTypeConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
@@ -60,16 +59,16 @@ $dataset->apply(new LambdaFunction(function (array &$sample) {
             $sample[2] = '?';
         }
     }))
-    ->apply(new MissingDataImputer(categorical: new Prior()))
+    ->apply(new MissingDataImputer())
     ->apply(new FloatTypeConverter())
     ->apply(new OneHotEncoder())
     ->apply(new ZScaleStandardizer());
 ```
 
-We'll need to set some of the data aside so that it can be used later for testing. The reason we separate the data rather than training the learner on *all* of the samples is because we want to be able to test the learner on samples it has never seen before. The `stratifiedSplit()` method on the Dataset object fairly splits the dataset into two subsets by a user-specified ratio. For this example, we'll use 80% of the data for training and hold out 20% for testing.
+We'll need to set some of the data aside so that it can be used later for testing. The reason we separate the data rather than training the learner on *all* of the samples is because we want to be able to test the learner on samples it has never seen before. The `stratifiedSplit()` method on the Dataset object fairly splits the dataset into two subsets by a user-specified ratio. Since the row order of the CSV is not guaranteed to be random, we'll first shuffle the samples with `randomize()` to ensure the split is representative. For this example, we'll use 80% of the data for training and hold out 20% for testing.
 
 ```php
-[$training, $testing] = $dataset->stratifiedSplit(0.8);
+[$training, $testing] = $dataset->randomize()->stratifiedSplit(0.8);
 ```
 
 ### Instantiating the Learner
@@ -78,14 +77,14 @@ You'll notice that [Logistic Regression](https://rubixml.github.io/ML/latest/cla
 
 As previously mentioned, Logistic Regression trains using an algorithm called Gradient Descent. Specifically, it uses a form of GD called *Mini-batch* Gradient Descent that feeds small batches of the randomized dataset through the learner at a time. The size of the batch is determined by the *batch size* hyper-parameter. A small batch size typically trains faster but produces a rougher gradient for the learner to traverse. For our example, we'll pick 128 samples per batch but feel free to play with this setting on your own.
 
-The next hyper-parameter is the GD Optimizer which controls the update step of the algorithm. In version 3, optimizers take a *learning-rate scheduler* that supplies the step size for each batch. The [Stochastic](https://rubixml.github.io/ML/latest/neural-network/optimizers/stochastic.html) optimizer, based on vanilla Stochastic Gradient Descent, steps proportional to the rate supplied by its scheduler. The [Step Decay](https://rubixml.github.io/ML/latest/neural-network/schedulers/step-decay.html) scheduler gradually decreases the learning rate by a given factor every *n* steps from its initial setting. This allows training to be fast at first and then slow down as it gets closer to reaching the minima of the gradient. We'll choose to decay the learning rate every 100 steps with a starting rate of 0.01. To instantiate the learner, pass the hyper-parameters to the Logistic Regression constructor.
+The next hyper-parameter is the GD Optimizer which controls the update step of the algorithm. In version 3, optimizers take a *learning-rate scheduler* that supplies the step size for each batch. The [Stochastic](https://rubixml.github.io/ML/latest/neural-network/optimizers/stochastic.html) optimizer, based on vanilla Stochastic Gradient Descent, steps proportional to the rate supplied by its scheduler. The [Step Decay](https://rubixml.github.io/ML/latest/neural-network/schedulers/step-decay.html) scheduler gradually decreases the learning rate by a given factor every *n* steps from its initial setting. This allows training to be fast at first and then slow down as it gets closer to reaching the minima of the gradient. We'll choose to decay the learning rate every 100 steps with a starting rate of 0.001. To instantiate the learner, pass the hyper-parameters to the Logistic Regression constructor.
 
 ```php
 use Rubix\ML\Classifiers\LogisticRegression;
 use Rubix\ML\NeuralNet\Optimizers\Stochastic;
 use Rubix\ML\NeuralNet\Optimizers\Schedulers\StepDecay;
 
-$estimator = new LogisticRegression(128, new Stochastic(new StepDecay(0.01, 100)));
+$estimator = new LogisticRegression(128, new Stochastic(new StepDecay(0.001, 100)));
 ```
 
 ### Setting a Logger
@@ -96,6 +95,14 @@ Since Logistic Regression implements the [Verbose](https://rubixml.github.io/ML/
 use Rubix\ML\Loggers\Screen;
 
 $estimator->setLogger(new Screen());
+```
+
+### Setting the Validation Dataset
+
+Logistic Regression is an iterative learner that supports an optional validation dataset. When one is supplied, the learner measures the training metric on that set at intervals throughout training to provide a sense of how well it is generalizing as it learns. We'll use the testing set that we set aside earlier for this purpose.
+
+```php
+$estimator->setValidationDataset($testing);
 ```
 
 ### Training
