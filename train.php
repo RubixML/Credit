@@ -7,6 +7,7 @@ use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\FloatTypeConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
+use Rubix\ML\Transformers\PowerTransformer;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Transformers\LambdaFunction;
 use Rubix\ML\Transformers\MissingDataImputer;
@@ -24,8 +25,11 @@ $logger = new Screen();
 
 $logger->info('Loading data into memory');
 
-$dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
-    ->apply(new LambdaFunction(function (array &$sample) {
+$dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
+
+$logger->info('Preprocessing data');
+    
+$dataset->apply(new LambdaFunction(function (array &$sample) {
         if ($sample[2] === '0') {
             $sample[2] = '?';
         }
@@ -33,6 +37,7 @@ $dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
     ->apply(new MissingDataImputer())
     ->apply(new FloatTypeConverter())
     ->apply(new OneHotEncoder())
+    ->apply(new PowerTransformer())
     ->apply(new ZScaleStandardizer());
 
 [$training, $testing] = $dataset->randomize()->stratifiedSplit(0.8);

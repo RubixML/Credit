@@ -45,13 +45,14 @@ Since data types cannot be inferred from the CSV format, the entire dataset will
 
 The categorical features such as gender, education, and marital status - as well as the continuous features such as age and credit limit are now in the appropriate format. However, the Logistic Regression estimator is not compatible with categorical features directly so we'll need to [One Hot Encode](https://rubixml.github.io/ML/latest/transformers/one-hot-encoder.html) them to convert them into continuous ones. *One hot* encoding takes a categorical feature column and transforms the values into a vector of binary features where the feature that represents the active category is high (1) and all others are low (0).
 
-In addition, it is a good practice to center and scale the dataset as it helps speed up the convergence of the Gradient Descent learning algorithm. To do that, we'll chain another transformation to the dataset called [Z Scale Standardizer](https://rubixml.github.io/ML/latest/transformers/z-scale-standardizer.html) which standardizes the data by dividing each column over its Z score.
+In addition, it is a good practice to center and scale the dataset as it helps speed up the convergence of the Gradient Descent learning algorithm. We'll do this in two steps. First, we'll chain a [Power Transformer](https://rubixml.github.io/ML/latest/transformers/power-transformer.html) which maps the features of each sample toward a normal distribution; since Logistic Regression is a linear learner, more normally distributed features can help it converge. Then we'll chain a [Z Scale Standardizer](https://rubixml.github.io/ML/latest/transformers/z-scale-standardizer.html) which standardizes the data by dividing each column over its Z score.
 
 ```php
 use Rubix\ML\Transformers\LambdaFunction;
 use Rubix\ML\Transformers\MissingDataImputer;
 use Rubix\ML\Transformers\FloatTypeConverter;
 use Rubix\ML\Transformers\OneHotEncoder;
+use Rubix\ML\Transformers\PowerTransformer;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 
 $dataset->apply(new LambdaFunction(function (array &$sample) {
@@ -62,6 +63,7 @@ $dataset->apply(new LambdaFunction(function (array &$sample) {
     ->apply(new MissingDataImputer())
     ->apply(new FloatTypeConverter())
     ->apply(new OneHotEncoder())
+    ->apply(new PowerTransformer())
     ->apply(new ZScaleStandardizer());
 ```
 
@@ -94,7 +96,9 @@ Since Logistic Regression implements the [Verbose](https://rubixml.github.io/ML/
 ```php
 use Rubix\ML\Loggers\Screen;
 
-$estimator->setLogger(new Screen());
+$logger = new Screen();
+
+$estimator->setLogger($logger);
 ```
 
 ### Setting the Validation Dataset
@@ -152,13 +156,17 @@ To generate the predictions for the report, call the `predict()` method on the e
 $predictions = $estimator->predict($testing);
 ```
 
-Then, generate the report with the predictions and the labels by calling the `generate()` method on the report instance.
+Then, generate the report with the predictions and the labels by calling the `generate()` method on the report instance. We'll also save the report as a JSON file so that it can be easily shared or referenced later.
 
 ```php
+use Rubix\ML\Persisters\Filesystem;
+
 $results = $report->generate($predictions, $testing->labels());
+
+$results->toJSON()->saveTo(new Filesystem('report.json'));
 ```
 
-Now we're ready to execute the training script and view the validation results.
+Now we're ready to execute the training script and view the validation results, which will also be saved to the `report.json` file.
 
 ```sh
 $ php train.php
