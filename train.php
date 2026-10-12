@@ -25,8 +25,11 @@ $logger = new Screen();
 
 $logger->info('Loading data into memory');
 
-$dataset = Labeled::fromIterator(new CSV('dataset.csv', true))
-    ->apply(new LambdaFunction(function (array &$sample) {
+$dataset = Labeled::fromIterator(new CSV('dataset.csv', true));
+
+$logger->info('Preprocessing data');
+    
+$dataset->apply(new LambdaFunction(function (array &$sample) {
         if ($sample[2] === '0') {
             $sample[2] = '?';
         }
