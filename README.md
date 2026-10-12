@@ -349,7 +349,7 @@ $embedder = new TSNE(
     rate: 20.0,
     perplexity: 20,
     exaggeration: 12.0,
-    epochs: 2000,
+    epochs: 1000,
     minGradient: 1e-7,
     evalInterval: 10,
     window: 5
@@ -358,13 +358,15 @@ $embedder = new TSNE(
 
 ### Embedding the Dataset
 
-Before we continue, we'll need to prepare the dataset for embedding since, like Logistic Regression, T-SNE is only compatible with continuous features. We can perform the necessary transformations on the dataset by passing the transformers to the `apply()` method on the dataset object like we did earlier in the tutorial.
+Before we continue, we'll need to prepare the dataset for embedding since, like Logistic Regression, T-SNE is only compatible with continuous features. We can perform the necessary transformations on the dataset by passing the transformers to the `apply()` method on the dataset object like we did earlier in the tutorial. We'll include the [Power Transformer](https://rubixml.github.io/ML/latest/transformers/power-transformer.html) to map the features of each sample toward a normal distribution before centering and scaling.
 
 ```php
 use Rubix\ML\Transformers\OneHotEncoder;
+use Rubix\ML\Transformers\PowerTransformer;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 
 $dataset->apply(new OneHotEncoder())
+    ->apply(new PowerTransformer())
     ->apply(new ZScaleStandardizer());
 ```
 

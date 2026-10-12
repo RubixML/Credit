@@ -6,6 +6,7 @@ use Rubix\ML\Loggers\Screen;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\FloatTypeConverter;
+use Rubix\ML\Transformers\PowerTransformer;
 use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\Transformers\LambdaFunction;
 use Rubix\ML\Transformers\MissingDataImputer;
@@ -51,6 +52,7 @@ $embedder = new TSNE(
 $embedder->setLogger($logger);
 
 $dataset->apply(new OneHotEncoder())
+    ->apply(new PowerTransformer())
     ->apply(new ZScaleStandardizer())
     ->apply($embedder)
     ->exportTo(new CSV('embedding.csv'), overwrite: true);
