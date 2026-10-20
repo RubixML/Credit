@@ -13,6 +13,7 @@ use Rubix\ML\Transformers\MissingDataImputer;
 use Rubix\ML\Transformers\OneHotEncoder;
 use Rubix\ML\Transformers\ZScaleStandardizer;
 use Rubix\ML\Transformers\TSNE;
+use Rubix\ML\CrossValidation\Metrics\Trustworthiness;
 
 ini_set('memory_limit', '-1');
 
@@ -51,10 +52,20 @@ $embedder = new TSNE(
 
 $embedder->setLogger($logger);
 
+$metric = new Trustworthiness();
+
 $dataset->apply(new OneHotEncoder())
     ->apply(new PowerTransformer())
-    ->apply(new ZScaleStandardizer())
-    ->apply($embedder)
-    ->exportTo(new CSV('embedding.csv'), overwrite: true);
+    ->apply(new ZScaleStandardizer());
+
+$original = clone $dataset;
+
+$dataset->apply($embedder);
+
+$trustworthiness = $metric->score($original->samples(), $dataset->samples());
+
+$logger->info("Trustworthiness: $trustworthiness");
+
+$dataset->exportTo(new CSV('embedding.csv'), overwrite: true);
 
 $logger->info('Embedding saved to embedding.csv');

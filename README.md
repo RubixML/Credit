@@ -1,6 +1,6 @@
 # Rubix ML - Credit Card Default Predictor
 
-An example Rubix ML project that predicts the probability of a customer defaulting on their credit card bill next month using a [Logistic Regression](https://rubixml.github.io/ML/latest/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset of credit card customers. We'll also describe the dataset using statistics and visualize it using a manifold learning technique called [t-SNE](https://rubixml.github.io/ML/latest/transformers/t-sne.html).
+An example Rubix ML project that predicts the probability of a customer defaulting on their credit card bill next month using a [Logistic Regression](https://rubixml.github.io/ML/latest/classifiers/logistic-regression.html) estimator and a 30,000 sample dataset of credit card customers. We'll also describe the dataset using statistics and visualize it using a manifold learning technique called [t-SNE](https://rubixml.github.io/ML/latest/transformers/t-sne.html). We'll measure how faithfully that embedding preserves the dataset's local structure using the [Trustworthiness](https://rubixml.github.io/ML/latest/cross-validation/metrics/trustworthiness.html) metric.
 
 ## Installation
 
@@ -372,10 +372,36 @@ $dataset->apply(new OneHotEncoder())
 
 > **Note:** Centering and standardizing the data with [Z Scale Standardizer](https://rubixml.github.io/ML/latest/transformers/z-scale-standardizer.html) or another standardizer is not always necessary, however, it just so happens that both Logistic Regression and t-SNE benefit when the data are centered and standardized.
 
+Before we embed the data we'll clone the transformed dataset so we can compare it against the embedded version once the embedding is complete.
+
+```php
+$original = clone $dataset;
+```
+
 Since an Embedder is a [Transformer](https://rubixml.github.io/ML/latest/transformers/api.md) at heart, you can use the newly instantiated t-SNE embedder to embed the samples in a dataset using the `apply()` method.
 
 ```php
 $dataset->apply($embedder);
+```
+
+### Evaluating the Embedding
+
+t-SNE is a heuristic and there is no ground truth for how well it has preserved the structure of the data. The [Trustworthiness](https://rubixml.github.io/ML/latest/cross-validation/metrics/trustworthiness.html) metric inspects each sample's nearest neighbors in the embedded space and penalizes any that were distant relatives in the original space. A score of `1.0` indicates the embedding perfectly preserves local structure; the more the local ordering is degraded by the projection, the lower the score. We'll score the embedding against the original transformed dataset and log the result.
+
+```php
+use Rubix\ML\CrossValidation\Metrics\Trustworthiness;
+
+$metric = new Trustworthiness();
+
+$trustworthiness = $metric->score($original->samples(), $dataset->samples());
+
+$logger->info("Trustworthiness: $trustworthiness");
+```
+
+For this dataset a typical run logs something like the following.
+
+```
+INFO    Trustworthiness: 0.76
 ```
 
 When the embedding is complete, we can save the dataset to a file so we can open it later in our favorite plotting software.
